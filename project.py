@@ -29,8 +29,17 @@ def load_image(name, colorkey=None):
     return image
 
 
-def size_image(name):
-    image = pygame.transform.scale(load_image(name), (50, 50))
+def size_image(name, size=None):
+    if size is None:
+        image = pygame.transform.scale(load_image(name), (50, 50))
+    elif size == 1:
+        image = pygame.transform.scale(load_image(name), (100, 100))
+    elif size == 2:
+        image = pygame.transform.scale(load_image(name, colorkey=-1), (50, 100))
+        image = pygame.transform.rotate(image, 90)
+        image = pygame.transform.rotate(image, 180)
+    elif size == 3:
+        image = pygame.transform.scale(load_image(name, colorkey=-1), (50, 50))
     return image
 
 
@@ -39,7 +48,7 @@ def load_level(filename):
     with open(filename, 'r') as mapFile:
         level_map = [line.strip() for line in mapFile]
     max_width = max(map(len, level_map))
-    return list(map(lambda x: x.ljust(max_width, '.'), level_map))
+    return level_map
 
 
 def start_game():
@@ -97,7 +106,7 @@ def main_menu():
                     terminate()
                     return
                 if 200 <= event.pos[0] <= 400 and 200 <= event.pos[1] <= 250:
-                    play_game()
+                    choose_car()
                     return
         pygame.display.flip()
 
@@ -105,8 +114,8 @@ def main_menu():
 def rules_game():
     image = pygame.transform.scale(load_image("rules.jpg"), (WIDTH, HEIGHT))
     SCREEN.blit(image, (0, 0))
-    font2 = pygame.font.Font(None, 40)
-    text = font2.render("Close", True, (0, 0, 255))
+    font = pygame.font.Font(None, 40)
+    text = font.render("Close", True, (0, 0, 255))
     pygame.draw.rect(SCREEN, (255, 255, 50), (500, 540, 90, 50))
     SCREEN.blit(text, (505, 555))
     while True:
@@ -120,6 +129,49 @@ def rules_game():
         pygame.display.flip()
 
 
+car = 0
+
+
+def choose_car():
+    global car
+    image = pygame.transform.scale(load_image("choose_car.jpg"), (WIDTH, HEIGHT))
+    SCREEN.blit(image, (0, 0))
+    font = pygame.font.Font(None, 40)
+    text = font.render("Choose car", True, (0, 0, 0))
+    text_x = WIDTH // 2 - text.get_width() // 2
+    SCREEN.blit(text, (text_x, 20))
+    image_car1 = pygame.transform.scale(load_image("car1.png"), (300, 100))
+    SCREEN.blit(image_car1, (150, 70))
+    image_car2 = pygame.transform.scale(load_image("car2.png"), (320, 180))
+    SCREEN.blit(image_car2, (150, 190))
+    image_car3 = pygame.transform.scale(load_image("car3.png"), (300, 180))
+    SCREEN.blit(image_car3, (150, 370))
+    text1 = font.render("1", True, (0, 0, 255))
+    text2 = font.render("2", True, (0, 0, 0))
+    text3 = font.render("3", True, (255, 0, 0))
+    SCREEN.blit(text1, (299, 190))
+    SCREEN.blit(text2, (299, 360))
+    SCREEN.blit(text3, (299, 550))
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_1:
+                    car = 1
+                    play_game()
+                    return
+                elif event.key == pygame.K_2:
+                    car = 2
+                    play_game()
+                    return
+                elif event.key == pygame.K_3:
+                    car = 3
+                    play_game()
+                    return
+        pygame.display.flip()
+
+
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
         super().__init__(tiles_group, SPRITES)
@@ -128,9 +180,9 @@ class Tile(pygame.sprite.Sprite):
 
 
 class PlayerCar(pygame.sprite.Sprite):
-    def __init__(self, pos_x, pos_y):
+    def __init__(self, image, pos_x, pos_y):
         super().__init__(player_group, SPRITES)
-        self.image = car_player
+        self.image = image
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
 
 
@@ -146,31 +198,28 @@ class Camera:
             obj.rect.x += (self.field_size[0] + 1) * obj.rect.width
         if obj.rect.x >= self.field_size[0] * obj.rect.width:
             obj.rect.x -= (self.field_size[0] + 1) * obj.rect.width
-        obj.rect.y += self.dy
-        if obj.rect.y < -obj.rect.height:
-            obj.rect.y += (self.field_size[1] + 1) * obj.rect.height
-        if obj.rect.y >= self.field_size[1] * obj.rect.height:
-            obj.rect.y -= (self.field_size[1] + 1) * obj.rect.height
 
     def update(self, target):
-        self.dx = -(target.rect.x + target.rect.w // 2 - WIDTH // 2)
-        self.dy = -(target.rect.y + target.rect.h // 4 - HEIGHT // 1.5)
+        self.dx = -(target.rect.x + target.rect.w // 2 - WIDTH // 3)
+        self.dy = -(target.rect.y + target.rect.h // 2 - HEIGHT // 2)
 
 
 def play_game():
+    player, level_x, level_y = generate_level(load_level('level1.txt'))
+    camera = Camera((level_x, level_y))
+    start_grass = 0
     while True:
         clock.tick(10)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT]:
-            player.rect.x -= STEP
-        if keys[pygame.K_RIGHT]:
-            player.rect.x += STEP
-        if keys[pygame.K_UP]:
+        player.rect.x += STEP
+        if keys[pygame.K_UP] and start_grass < 2:
+            start_grass += 1
             player.rect.y -= STEP
-        if keys[pygame.K_DOWN]:
+        if keys[pygame.K_DOWN] and start_grass > -2:
+            start_grass -= 1
             player.rect.y += STEP
         camera.update(player)
         for sprite in SPRITES:
@@ -181,6 +230,13 @@ def play_game():
 
 
 def generate_level(level):
+    global car
+    if car == 1:
+        image = size_image('blue_car.PNG', size=2)
+    elif car == 2:
+        image = size_image('white_car.PNG', size=2)
+    elif car == 3:
+        image = size_image('red_car.PNG', size=2)
     new_player, x, y = None, None, None
     for y in range(len(level)):
         for x in range(len(level[y])):
@@ -190,7 +246,7 @@ def generate_level(level):
                 Tile('home1', x, y)
             elif level[y][x] == 'R':
                 Tile('road', x, y)
-                new_player = PlayerCar(x, y)
+                new_player = PlayerCar(image, x, y)
             elif level[y][x] == '2':
                 Tile('home2', x, y)
             elif level[y][x] == '3':
@@ -235,22 +291,18 @@ def terminate():
     sys.exit()
 
 
-dict_tiles = {'road': size_image('road.JPG'), 'wood': size_image('wood.JPG'),
-              'fountain': size_image('fountain.JPG'), 'home1': size_image('home1.JPG'),
-              'home2': size_image('home2.JPG'), 'home3': size_image('home3.JPG'),
-              'home4': size_image('home4.JPG'), 'home5': size_image('home5.JPG'),
-              'home6': size_image('home6.JPG'), 'home7': size_image('home7.JPG'),
-              'home8': size_image('home8.JPG'), 'home9': size_image('home9.JPG'),
+dict_tiles = {'road': size_image('road.JPG'), 'wood': size_image('wood2.PNG', size=3),
+              'fountain': size_image('fountain.JPG'), 'home1': size_image('home1.JPG', size=1),
+              'home2': size_image('home2.JPG'), 'home3': size_image('home3.JPG', size=1),
+              'home4': size_image('home4.JPG', size=1), 'home5': size_image('home5.JPG', size=1),
+              'home6': size_image('home6.JPG', size=1), 'home7': size_image('home7.JPG'),
+              'home8': size_image('home8.JPG'), 'home9': size_image('home9.JPG', size=1),
               'home10': size_image('home10.JPG'), 'home11': size_image('home11.JPG'),
-              'home12': size_image('home12.JPG'), 'water': size_image('water.JPG'),
+              'home12': size_image('home12.JPG', size=1), 'water': size_image('water.JPG'),
               'stump': size_image('stump.JPG'), 'rock': size_image('rock.JPG'),
               'flower1': size_image('flower1.JPG'), 'flower2': size_image('flower2.JPG'),
               'grass': size_image('grass.JPG'), 'grass2': size_image('grass2.JPG')}
-car_player = size_image('red_car.JPG')
 tile_width = tile_height = 50
-player, level_x, level_y = generate_level(load_level('level1.txt'))
-camera = Camera((level_x, level_y))
-
 if __name__ == "__main__":
     running = True
     start_game()
