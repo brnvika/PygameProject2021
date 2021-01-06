@@ -12,6 +12,7 @@ SPRITES = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
 tiles_obstacles = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
+people_group = pygame.sprite.Group()
 clock = pygame.time.Clock()
 
 
@@ -203,12 +204,6 @@ class PlayerCar(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
 
-def moving():
-    if pygame.sprite.groupcollide(player_group, tiles_obstacles, False, False):
-        return False
-    return True
-
-
 class Shell():
     def __init__(self, x, y, radius, color):
         self.x = x
@@ -277,10 +272,39 @@ def play_game():
         player_group.draw(SCREEN)
         for bomb in bombs:
             bomb.draw(SCREEN)
-        if moving() is False:
+        if pygame.sprite.groupcollide(player_group, tiles_obstacles, False, False):
             run = False
         pygame.display.flip()
-    SCREEN.fill((0, 0, 0))
+    game_over()
+
+
+def game_over():
+    image = pygame.transform.scale(load_image("game_over.jpg"),
+                                   (400, 400))
+    SCREEN.blit(image, (100, 100))
+    font = pygame.font.Font(None, 40)
+    text = font.render("restart", True, (255, 51, 0))
+    pygame.draw.rect(SCREEN, (0, 255, 204), (120, 440, 120, 40))
+    SCREEN.blit(text, (135, 448))
+    text2 = font.render("menu", True, (255, 51, 0))
+    pygame.draw.rect(SCREEN, (0, 255, 204), (360, 440, 120, 40))
+    SCREEN.blit(text2, (380, 448))
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if 360 <= event.pos[0] <= 480 and 440 <= event.pos[1] <= 480:
+                    main_menu()
+                    return
+                if 120 <= event.pos[0] <= 240 and 440 <= event.pos[1] <= 480:
+                    restart()
+                    return
+        pygame.display.flip()
+
+
+def restart():
+    pass
 
 
 def generate_level(level):
