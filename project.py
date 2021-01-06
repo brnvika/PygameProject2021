@@ -1,6 +1,7 @@
 import pygame
 import os
 import sys
+import random
 
 pygame.init()
 SIZE = WIDTH, HEIGHT = 600, 600
@@ -9,6 +10,7 @@ STEP = 50
 SPRITES = pygame.sprite.Group()
 
 tiles_group = pygame.sprite.Group()
+tiles_obstacles = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
 clock = pygame.time.Clock()
 
@@ -52,7 +54,8 @@ def load_level(filename):
 
 
 def start_game():
-    image = pygame.transform.scale(load_image("screen_game.JPG"), (WIDTH, HEIGHT))
+    image = pygame.transform.scale(load_image("screen_game.JPG"),
+                                   (WIDTH, HEIGHT))
     SCREEN.blit(image, (0, 0))
     pygame.draw.rect(SCREEN, (255, 0, 0), (250, 530, 100, 50))
     font = pygame.font.Font(None, 50)
@@ -70,7 +73,8 @@ def start_game():
 
 
 def main_menu():
-    image_menu = pygame.transform.scale(load_image("Menu_game.jpg"), (WIDTH, HEIGHT))
+    image_menu = pygame.transform.scale(load_image("Menu_game.jpg"),
+                                        (WIDTH, HEIGHT))
     SCREEN.blit(image_menu, (0, 0))
     font = pygame.font.Font(None, 70)
     font2 = pygame.font.Font(None, 50)
@@ -134,7 +138,8 @@ car = 0
 
 def choose_car():
     global car
-    image = pygame.transform.scale(load_image("choose_car.jpg"), (WIDTH, HEIGHT))
+    image = pygame.transform.scale(load_image("choose_car.jpg"),
+                                   (WIDTH, HEIGHT))
     SCREEN.blit(image, (0, 0))
     font = pygame.font.Font(None, 40)
     text = font.render("Choose car", True, (0, 0, 0))
@@ -176,14 +181,44 @@ class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
         super().__init__(tiles_group, SPRITES)
         self.image = dict_tiles[tile_type]
-        self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
+        self.rect = self.image.get_rect().move(tile_width * pos_x,
+                                               tile_height * pos_y)
+
+
+class Obstacles(pygame.sprite.Sprite):
+    def __init__(self, tile_type, pos_x, pos_y):
+        super().__init__(tiles_obstacles, SPRITES)
+        self.image = dict_obstacles[tile_type]
+        self.rect = self.image.get_rect().move(tile_width * pos_x,
+                                               tile_height * pos_y)
+        self.mask = pygame.mask.from_surface(self.image)
 
 
 class PlayerCar(pygame.sprite.Sprite):
     def __init__(self, image, pos_x, pos_y):
         super().__init__(player_group, SPRITES)
         self.image = image
-        self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
+        self.rect = self.image.get_rect().move(tile_width * pos_x,
+                                               tile_height * pos_y)
+        self.mask = pygame.mask.from_surface(self.image)
+
+
+def moving():
+    if pygame.sprite.groupcollide(player_group, tiles_obstacles, False, False):
+        return False
+    return True
+
+
+class Shell():
+    def __init__(self, x, y, radius, color):
+        self.x = x
+        self.y = y
+        self.radius = radius
+        self.color = color
+        self.speed = 20
+
+    def draw(self, SCREEN):
+        pygame.draw.circle(SCREEN, self.color, (self.x, self.y), self.radius)
 
 
 class Camera:
@@ -208,13 +243,26 @@ def play_game():
     player, level_x, level_y = generate_level(load_level('level1.txt'))
     camera = Camera((level_x, level_y))
     start_grass = 0
-    while True:
+    bombs = []
+    run = True
+    while run:
         clock.tick(10)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
+        for bomb in bombs:
+            if bomb.x < 600:
+                bomb.x += bomb.speed
+            else:
+                bombs.pop(bombs.index(bomb))
         keys = pygame.key.get_pressed()
         player.rect.x += STEP
+        if keys[pygame.K_SPACE]:
+            if len(bombs) < 3:
+                bombs.append(Shell(player.rect.x + 40,
+                                   player.rect.y + 25, 8, (random.randrange(0, 255),
+                                                           random.randrange(0, 255),
+                                                           random.randrange(0, 255))))
         if keys[pygame.K_UP] and start_grass < 2:
             start_grass += 1
             player.rect.y -= STEP
@@ -225,8 +273,14 @@ def play_game():
         for sprite in SPRITES:
             camera.apply(sprite)
         tiles_group.draw(SCREEN)
+        tiles_obstacles.draw(SCREEN)
         player_group.draw(SCREEN)
+        for bomb in bombs:
+            bomb.draw(SCREEN)
+        if moving() is False:
+            run = False
         pygame.display.flip()
+    SCREEN.fill((0, 0, 0))
 
 
 def generate_level(level):
@@ -238,51 +292,27 @@ def generate_level(level):
     elif car == 3:
         image = size_image('red_car.PNG', size=2)
     new_player, x, y = None, None, None
+    dict_symbols = {'.': 'road', 'f': 'fountain', 'R': 'red_car',
+                    'W': 'white_car', 'B': 'blue_car', '1': 'home1',
+                    '2': 'home2', '3': 'home3', '4': 'home4',
+                    '5': 'home5', '6': 'home6', '7': 'home7',
+                    '8': 'home8', '9': 'home9', '0': 'home10',
+                    'e': 'home11', 't': 'home12', 'g': 'grass',
+                    '*': 'grass2', 's': 'stump', 'w': 'water',
+                    'd': 'wood', 'r': 'rock', '-': 'flower1',
+                    '+': 'flower2', '#': 'finish'}
+    obstacles = {'&': 'stones', '%': 'stones2', '!': 'box'}
     for y in range(len(level)):
         for x in range(len(level[y])):
-            if level[y][x] == '.':
-                Tile('road', x, y)
-            elif level[y][x] == '1':
-                Tile('home1', x, y)
-            elif level[y][x] == 'R':
+            if level[y][x] == 'R' or level[y][x] == 'B' or level[y][x] == 'W' \
+                    and level[y][x] != ' ':
                 Tile('road', x, y)
                 new_player = PlayerCar(image, x, y)
-            elif level[y][x] == '2':
-                Tile('home2', x, y)
-            elif level[y][x] == '3':
-                Tile('home3', x, y)
-            elif level[y][x] == '4':
-                Tile('home4', x, y)
-            elif level[y][x] == '5':
-                Tile('home5', x, y)
-            elif level[y][x] == '6':
-                Tile('home6', x, y)
-            elif level[y][x] == '7':
-                Tile('home7', x, y)
-            elif level[y][x] == '8':
-                Tile('home8', x, y)
-            elif level[y][x] == '9':
-                Tile('home9', x, y)
-            elif level[y][x] == '0':
-                Tile('home10', x, y)
-            elif level[y][x] == 'e':
-                Tile('home11', x, y)
-            elif level[y][x] == 't':
-                Tile('home12', x, y)
-            elif level[y][x] == 'd':
-                Tile('wood', x, y)
-            elif level[y][x] == '+':
-                Tile('flower2', x, y)
-            elif level[y][x] == 's':
-                Tile('stump', x, y)
-            elif level[y][x] == 'g':
-                Tile('grass', x, y)
-            elif level[y][x] == '-':
-                Tile('flower1', x, y)
-            elif level[y][x] == 'w':
-                Tile('water', x, y)
-            elif level[y][x] == 'r':
-                Tile('rock', x, y)
+            else:
+                if level[y][x] != ' ' and level[y][x] in dict_symbols:
+                    Tile(dict_symbols[level[y][x]], x, y)
+                elif level[y][x] != ' ' and level[y][x] in obstacles:
+                    Obstacles(obstacles[level[y][x]], x, y)
     return new_player, x, y
 
 
@@ -291,17 +321,26 @@ def terminate():
     sys.exit()
 
 
-dict_tiles = {'road': size_image('road.JPG'), 'wood': size_image('wood2.PNG', size=3),
-              'fountain': size_image('fountain.JPG'), 'home1': size_image('home1.JPG', size=1),
-              'home2': size_image('home2.JPG'), 'home3': size_image('home3.JPG', size=1),
-              'home4': size_image('home4.JPG', size=1), 'home5': size_image('home5.JPG', size=1),
-              'home6': size_image('home6.JPG', size=1), 'home7': size_image('home7.JPG'),
-              'home8': size_image('home8.JPG'), 'home9': size_image('home9.JPG', size=1),
-              'home10': size_image('home10.JPG'), 'home11': size_image('home11.JPG'),
-              'home12': size_image('home12.JPG', size=1), 'water': size_image('water.JPG'),
-              'stump': size_image('stump.JPG'), 'rock': size_image('rock.JPG'),
-              'flower1': size_image('flower1.JPG'), 'flower2': size_image('flower2.JPG'),
-              'grass': size_image('grass.JPG'), 'grass2': size_image('grass2.JPG')}
+dict_tiles = {'road': size_image('road.JPG'),
+              'wood': size_image('wood2.PNG', size=3),
+              'fountain': size_image('fountain.JPG'),
+              'home1': size_image('home1.JPG', size=1),
+              'home2': size_image('home2.JPG'), 'home3':
+                  size_image('home3.JPG', size=1), 'home4':
+                  size_image('home4.JPG', size=1), 'home5':
+                  size_image('home5.JPG', size=1),
+              'home6': size_image('home6.JPG', size=1),
+              'home7': size_image('home7.JPG'), 'home8': size_image('home8.JPG'),
+              'home9': size_image('home9.JPG', size=1), 'home10':
+                  size_image('home10.JPG'), 'home11': size_image('home11.JPG'),
+              'home12': size_image('home12.JPG', size=1),
+              'water': size_image('water.JPG'), 'stump': size_image('stump.JPG'),
+              'rock': size_image('rock.JPG'), 'flower1': size_image('flower1.JPG'),
+              'flower2': size_image('flower2.JPG'), 'grass': size_image('grass.JPG'),
+              'grass2': size_image('grass2.JPG'), 'finish': size_image('finish.gif')}
+dict_obstacles = {'stones': size_image('stones.png', size=3),
+                  'stones2': size_image('stones2.png', size=3),
+                  'box': size_image('box.png')}
 tile_width = tile_height = 50
 if __name__ == "__main__":
     running = True
