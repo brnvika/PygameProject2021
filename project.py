@@ -50,7 +50,6 @@ def load_level(filename):
     filename = "levels/" + filename
     with open(filename, 'r') as mapFile:
         level_map = [line.strip() for line in mapFile]
-    max_width = max(map(len, level_map))
     return level_map
 
 
@@ -204,6 +203,15 @@ class PlayerCar(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
 
+class Man(pygame.sprite.Sprite):
+    def __init__(self, image, pos_x, pos_y):
+        super().__init__(people_group, SPRITES)
+        self.image = image
+        self.rect = self.image.get_rect().move(tile_width * pos_x,
+                                               tile_height * pos_y)
+        self.mask = pygame.mask.from_surface(self.image)
+
+
 class Shell():
     def __init__(self, x, y, radius, color):
         self.x = x
@@ -235,23 +243,38 @@ class Camera:
 
 
 def play_game():
-    player, level_x, level_y = generate_level(load_level('level1.txt'))
+    player, level_x, level_y, man = generate_level(load_level('level1.txt'))
     camera = Camera((level_x, level_y))
     start_grass = 0
     bombs = []
     run = True
+    run2 = False
     while run:
+        clock.tick(3)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+        man.rect.y += STEP
+        if pygame.sprite.groupcollide(player_group, people_group, False, True):
+            run2 = True
+            run = False
+        tiles_group.draw(SCREEN)
+        tiles_obstacles.draw(SCREEN)
+        player_group.draw(SCREEN)
+        people_group.draw(SCREEN)
+        pygame.display.flip()
+    while run2:
         clock.tick(10)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
+        player.rect.x += STEP
         for bomb in bombs:
             if bomb.x < 600:
                 bomb.x += bomb.speed
             else:
                 bombs.pop(bombs.index(bomb))
         keys = pygame.key.get_pressed()
-        player.rect.x += STEP
         if keys[pygame.K_SPACE]:
             if len(bombs) < 3:
                 bombs.append(Shell(player.rect.x + 40,
@@ -270,10 +293,14 @@ def play_game():
         tiles_group.draw(SCREEN)
         tiles_obstacles.draw(SCREEN)
         player_group.draw(SCREEN)
+        people_group.draw(SCREEN)
         for bomb in bombs:
             bomb.draw(SCREEN)
         if pygame.sprite.groupcollide(player_group, tiles_obstacles, False, False):
-            run = False
+            run2 = False
+            player_group.empty()
+            tiles_obstacles.empty()
+            tiles_group.empty()
         pygame.display.flip()
     game_over()
 
@@ -304,7 +331,7 @@ def game_over():
 
 
 def restart():
-    pass
+    play_game()
 
 
 def generate_level(level):
@@ -315,7 +342,7 @@ def generate_level(level):
         image = size_image('white_car.PNG', size=2)
     elif car == 3:
         image = size_image('red_car.PNG', size=2)
-    new_player, x, y = None, None, None
+    new_player, x, y, man = None, None, None, None
     dict_symbols = {'.': 'road', 'f': 'fountain', 'R': 'red_car',
                     'W': 'white_car', 'B': 'blue_car', '1': 'home1',
                     '2': 'home2', '3': 'home3', '4': 'home4',
@@ -326,6 +353,9 @@ def generate_level(level):
                     'd': 'wood', 'r': 'rock', '-': 'flower1',
                     '+': 'flower2', '#': 'finish'}
     obstacles = {'&': 'stones', '%': 'stones2', '!': 'box'}
+    people = [size_image('man1.PNG', size=3), size_image('man2.PNG', size=3),
+              size_image('man3.PNG', size=3)]
+    image2 = random.choice(people)
     for y in range(len(level)):
         for x in range(len(level[y])):
             if level[y][x] == 'R' or level[y][x] == 'B' or level[y][x] == 'W' \
@@ -337,7 +367,10 @@ def generate_level(level):
                     Tile(dict_symbols[level[y][x]], x, y)
                 elif level[y][x] != ' ' and level[y][x] in obstacles:
                     Obstacles(obstacles[level[y][x]], x, y)
-    return new_player, x, y
+                elif level[y][x] != ' ' and level[y][x] == '@':
+                    Tile('grass', x, y)
+                    man = Man(image2, x, y)
+    return new_player, x, y, man
 
 
 def terminate():
