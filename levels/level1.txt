@@ -1,13 +1,13 @@
-g@ggggggggggggggggggggggggggggg5 gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg
-ggggg1 ggggggg+gggggggggggggggg  gggggggggggggggggggggggggggggggggggg3 gggggggggggggggggggggggggggggggggggggggg
-ggggg  ggggggggggggggggggggggggggggggggggg9 ggggggggggggggggggggggggg  ggggggggggggggggggggg6 ggggggggggggggggg
-gggggggggggggggggggggggggsgggggggggggggggg  gggggggggggggggggggggggggggggggggggggggggggggggg  ggggggggggggggggg
-........................................................!.....................................................#
-................%...............&............%..........................................%.....................#
-.R.......................................................!.............................................!......#
-............................................&...................................!.............................#
-....................&........!................................................................&...............#
-gggggggggggggggggggggggggggg-ggggggggggggggggggggggggggggggggggggggggggggg5 gggggggggggggggggggggggggggsggggggg
-gggggggg1 gggggggg3 gggggggggggggggggggggg4 gggggggggggggg6 ggggggggsggggg  gggggggggggggggggg9 ggggggggggggggg
-gggggggg  gggggggg  gggggggggggg+ggggggggg  gggggggggggggg  gggggggggggggggggggggggggggggggggg  ggggggggggggggg
-ggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg
+g@ggggggggggggggggggggggggggggg5 gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg
+ggggg1 ggggggg+gggggggggggggggg  gggggggggggggggggggggggggggggggggggg3 ggggggggggggggggggggggggggggggggggggg1 gggggggggggggggggggggggggggggggg-ggggggggggg9 ggggggggggggggggggggggggggggggggg6 gggggggggggggggggggggggg
+ggggg  ggggggggggggggggggggggggggggggggggg9 ggggggggggggggggggggggggg  ggggggggggggggggggggg6 gggggggggggggg  ggggggggg+gggggggggg5 gggggggggggggggggggggg  gggggggggggggggrggggggggggggggggg  ggggggggg+gggggggggggggg
+gggggggggggggggggggggggggsgggggggggggggggg  gggggggggggggggggggggggggggggggggggggggggggggggg  gggggggggggggggggggggggggggggggggggg  ggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg
+........................................................!...............&.............................................%..................................!...........................%............................#....
+................%...............&............%..........................................%.......................................&......................................&............................&.............#....
+.R............................%...........................!.............................................!.....................................%...................................................................#....
+............................................&...................................!.......................!............&.......................................................%....................................#....
+....................&........!.......................%.........................................&...................................!.....................&....................................!...................#....
+gggggggggggggggggggggggggggg-ggggggggggggggggggggggggggggggggggggggggggggg5 gggggggggggggggggggggggggggsgggggggggggggggggggggggggggggggggg+gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg
+gggggggg1 gggggggg3 gggggggggggggggggggggg4 gggggggggggggg6 ggggggggsggggg  gggggggggggggggggg9 ggggggggggggggggggg3 gggggggggggggggggggggggggggggggggggggg4 ggggggggggg-ggggggggggggggggggggggggggggg1 ggggggggggggggg
+gggggggg  gggggggg  gggggggggggg+ggggggggg  gggggggggggggg  gggggggggggggggggggggggggggggggggg  ggggggggggggggggggg  ggggggggggrggggggggggggggggggggggggggg  gggggggggggggggggggggggggsggggggggggggggg  ggggggggggggggg
+ggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg

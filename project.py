@@ -13,6 +13,7 @@ tiles_group = pygame.sprite.Group()
 tiles_obstacles = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
 people_group = pygame.sprite.Group()
+shell = pygame.sprite.Sprite()
 clock = pygame.time.Clock()
 
 
@@ -212,7 +213,7 @@ class Man(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
 
-class Shell():
+class Shell:
     def __init__(self, x, y, radius, color):
         self.x = x
         self.y = y
