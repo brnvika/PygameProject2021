@@ -8,12 +8,13 @@ SIZE = WIDTH, HEIGHT = 600, 600
 SCREEN = pygame.display.set_mode(SIZE)
 STEP = 50
 SPRITES = pygame.sprite.Group()
-
 tiles_group = pygame.sprite.Group()
 tiles_obstacles = pygame.sprite.Group()
+tiles_obstacles2 = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
 people_group = pygame.sprite.Group()
-shell = pygame.sprite.Sprite()
+finish = pygame.sprite.Group()
+finish_man = pygame.sprite.Group()
 clock = pygame.time.Clock()
 
 
@@ -44,6 +45,8 @@ def size_image(name, size=None):
         image = pygame.transform.rotate(image, 180)
     elif size == 3:
         image = pygame.transform.scale(load_image(name, colorkey=-1), (50, 50))
+    elif size == 4:
+        image = pygame.transform.scale(load_image(name), (150, 100))
     return image
 
 
@@ -195,6 +198,15 @@ class Obstacles(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
 
+class Obstacles2(pygame.sprite.Sprite):
+    def __init__(self, tile_type, pos_x, pos_y):
+        super().__init__(tiles_obstacles2, SPRITES)
+        self.image = dict_obstacles2[tile_type]
+        self.rect = self.image.get_rect().move(tile_width * pos_x,
+                                               tile_height * pos_y)
+        self.mask = pygame.mask.from_surface(self.image)
+
+
 class PlayerCar(pygame.sprite.Sprite):
     def __init__(self, image, pos_x, pos_y):
         super().__init__(player_group, SPRITES)
@@ -213,6 +225,14 @@ class Man(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
 
+class FinishMan(pygame.sprite.Sprite):
+    def __init__(self, image, pos_x, pos_y):
+        super().__init__(finish_man, SPRITES)
+        self.image = image
+        self.rect = self.image.get_rect().move(tile_width * pos_x,
+                                               tile_height * pos_y)
+
+
 class Shell:
     def __init__(self, x, y, radius, color):
         self.x = x
@@ -223,6 +243,15 @@ class Shell:
 
     def draw(self, SCREEN):
         pygame.draw.circle(SCREEN, self.color, (self.x, self.y), self.radius)
+
+
+class Finish(pygame.sprite.Sprite):
+    def __init__(self, pos_x, pos_y):
+        super().__init__(finish, SPRITES)
+        self.image = size_image('finish.gif')
+        self.rect = self.image.get_rect().move(tile_width * pos_x,
+                                               tile_height * pos_y)
+        self.mask = pygame.mask.from_surface(self.image)
 
 
 class Camera:
@@ -243,13 +272,23 @@ class Camera:
         self.dy = -(target.rect.y + target.rect.h // 2 - HEIGHT // 2)
 
 
+level = 2
+
+
 def play_game():
-    player, level_x, level_y, man = generate_level(load_level('level1.txt'))
+    global level
+    levels = {1: 'level1.txt', 2: 'level2.txt', 3: 'level3.txt', 4: 'level4.txt',
+              5: 'level5.txt', 6: 'level6.txt', 7: 'level7.txt', 8: 'level8.txt',
+              9: 'level9.txt', 10: 'level10.txt', 11: 'level11.txt'}
+    player, level_x, level_y, man, man_f = generate_level(load_level(levels[level - 1]))
     camera = Camera((level_x, level_y))
+    font = pygame.font.Font(None, 50)
+    text = font.render(str(level - 1), True, (0, 0, 0))
     start_grass = 0
     bombs = []
     run = True
     run2 = False
+    run3 = False
     while run:
         clock.tick(3)
         for event in pygame.event.get():
@@ -261,20 +300,16 @@ def play_game():
             run = False
         tiles_group.draw(SCREEN)
         tiles_obstacles.draw(SCREEN)
+        tiles_obstacles2.draw(SCREEN)
         player_group.draw(SCREEN)
         people_group.draw(SCREEN)
         pygame.display.flip()
     while run2:
-        clock.tick(10)
+        clock.tick(5)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
         player.rect.x += STEP
-        for bomb in bombs:
-            if bomb.x < 600:
-                bomb.x += bomb.speed
-            else:
-                bombs.pop(bombs.index(bomb))
         keys = pygame.key.get_pressed()
         if keys[pygame.K_SPACE]:
             if len(bombs) < 3:
@@ -288,22 +323,66 @@ def play_game():
         if keys[pygame.K_DOWN] and start_grass > -2:
             start_grass -= 1
             player.rect.y += STEP
+        for bomb in bombs:
+            if bomb.x < 600:
+                bomb.x += bomb.speed
+            else:
+                bombs.pop(bombs.index(bomb))
         camera.update(player)
         for sprite in SPRITES:
             camera.apply(sprite)
         tiles_group.draw(SCREEN)
         tiles_obstacles.draw(SCREEN)
+        tiles_obstacles2.draw(SCREEN)
+        finish.draw(SCREEN)
         player_group.draw(SCREEN)
         people_group.draw(SCREEN)
+        SCREEN.blit(text, (300, 10))
         for bomb in bombs:
             bomb.draw(SCREEN)
-        if pygame.sprite.groupcollide(player_group, tiles_obstacles, False, False):
+            for s in tiles_obstacles2:
+                if bomb.x >= s.rect.x - player.rect.x + 150 \
+                        and s.rect.y <= bomb.y <= s.rect.y + 50:
+                    s.kill()
+        if pygame.sprite.groupcollide(player_group, finish, False, False):
+            level += 1
+            run2 = False
+            run3 = True
+        if pygame.sprite.groupcollide(player_group, tiles_obstacles, False, False) \
+                or pygame.sprite.groupcollide(player_group, tiles_obstacles2, False, False):
             run2 = False
             player_group.empty()
             tiles_obstacles.empty()
             tiles_group.empty()
+            tiles_obstacles2.empty()
+            game_over()
         pygame.display.flip()
-    game_over()
+    man_f.rect.y = player.rect.y
+    while run3:
+        clock.tick(3)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+        man_f.rect.y += STEP
+        start_grass -= 1
+        if start_grass == -5:
+            player_group.empty()
+            tiles_obstacles.empty()
+            tiles_obstacles2.empty()
+            tiles_group.empty()
+            finish.empty()
+            people_group.empty()
+            finish_man.empty()
+            play_game()
+        tiles_group.draw(SCREEN)
+        tiles_obstacles.draw(SCREEN)
+        player_group.draw(SCREEN)
+        finish_man.draw(SCREEN)
+        pygame.display.flip()
+
+
+def check_cross():
+    pass
 
 
 def game_over():
@@ -343,7 +422,7 @@ def generate_level(level):
         image = size_image('white_car.PNG', size=2)
     elif car == 3:
         image = size_image('red_car.PNG', size=2)
-    new_player, x, y, man = None, None, None, None
+    new_player, x, y, man, man_f = None, None, None, None, None
     dict_symbols = {'.': 'road', 'f': 'fountain', 'R': 'red_car',
                     'W': 'white_car', 'B': 'blue_car', '1': 'home1',
                     '2': 'home2', '3': 'home3', '4': 'home4',
@@ -352,8 +431,9 @@ def generate_level(level):
                     'e': 'home11', 't': 'home12', 'g': 'grass',
                     '*': 'grass2', 's': 'stump', 'w': 'water',
                     'd': 'wood', 'r': 'rock', '-': 'flower1',
-                    '+': 'flower2', '#': 'finish'}
+                    '+': 'flower2'}
     obstacles = {'&': 'stones', '%': 'stones2', '!': 'box'}
+    obstacles2 = {'x': 'wall'}
     people = [size_image('man1.PNG', size=3), size_image('man2.PNG', size=3),
               size_image('man3.PNG', size=3)]
     image2 = random.choice(people)
@@ -368,10 +448,17 @@ def generate_level(level):
                     Tile(dict_symbols[level[y][x]], x, y)
                 elif level[y][x] != ' ' and level[y][x] in obstacles:
                     Obstacles(obstacles[level[y][x]], x, y)
+                elif level[y][x] != ' ' and level[y][x] in obstacles2:
+                    Obstacles2(obstacles2[level[y][x]], x, y)
                 elif level[y][x] != ' ' and level[y][x] == '@':
                     Tile('grass', x, y)
                     man = Man(image2, x, y)
-    return new_player, x, y, man
+                elif level[y][x] != ' ' and level[y][x] == '#':
+                    Finish(x, y)
+                elif level[y][x] != ' ' and level[y][x] == 'p':
+                    Tile('road', x, y)
+                    man_f = FinishMan(image2, x, y)
+    return new_player, x, y, man, man_f
 
 
 def terminate():
@@ -382,23 +469,23 @@ def terminate():
 dict_tiles = {'road': size_image('road.JPG'),
               'wood': size_image('wood2.PNG', size=3),
               'fountain': size_image('fountain.JPG'),
-              'home1': size_image('home1.JPG', size=1),
-              'home2': size_image('home2.JPG'), 'home3':
+              'home1': size_image('home1.JPG', size=1), 'home3':
                   size_image('home3.JPG', size=1), 'home4':
-                  size_image('home4.JPG', size=1), 'home5':
+                  size_image('home4.JPG', size=4), 'home5':
                   size_image('home5.JPG', size=1),
               'home6': size_image('home6.JPG', size=1),
-              'home7': size_image('home7.JPG'), 'home8': size_image('home8.JPG'),
+              'home7': size_image('home7.JPG', size=4), 'home8': size_image('home8.JPG'),
               'home9': size_image('home9.JPG', size=1), 'home10':
-                  size_image('home10.JPG'), 'home11': size_image('home11.JPG'),
+                  size_image('home10.JPG', size=4),
               'home12': size_image('home12.JPG', size=1),
               'water': size_image('water.JPG'), 'stump': size_image('stump.JPG'),
               'rock': size_image('rock.JPG'), 'flower1': size_image('flower1.JPG'),
               'flower2': size_image('flower2.JPG'), 'grass': size_image('grass.JPG'),
               'grass2': size_image('grass2.JPG'), 'finish': size_image('finish.gif')}
-dict_obstacles = {'stones': size_image('stones.png', size=3),
-                  'stones2': size_image('stones2.png', size=3),
+dict_obstacles = {'stones': size_image('stones.PNG', size=3),
+                  'stones2': size_image('stones2.PNG', size=3),
                   'box': size_image('box.png')}
+dict_obstacles2 = {'wall': size_image('wall.JPG')}
 tile_width = tile_height = 50
 if __name__ == "__main__":
     running = True
