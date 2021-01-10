@@ -9,6 +9,7 @@ SCREEN = pygame.display.set_mode(SIZE)
 STEP = 50
 SPRITES = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
+tiles_objects = pygame.sprite.Group()
 tiles_obstacles = pygame.sprite.Group()
 tiles_obstacles2 = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
@@ -38,7 +39,7 @@ def size_image(name, size=None):
     if size is None:
         image = pygame.transform.scale(load_image(name), (50, 50))
     elif size == 1:
-        image = pygame.transform.scale(load_image(name), (100, 100))
+        image = pygame.transform.scale(load_image(name, colorkey=-1), (150, 150))
     elif size == 2:
         image = pygame.transform.scale(load_image(name, colorkey=-1), (50, 100))
         image = pygame.transform.rotate(image, 90)
@@ -189,6 +190,14 @@ class Tile(pygame.sprite.Sprite):
                                                tile_height * pos_y)
 
 
+class Objects(pygame.sprite.Sprite):
+    def __init__(self, tile_type, pos_x, pos_y):
+        super().__init__(tiles_objects, SPRITES)
+        self.image = objects[tile_type]
+        self.rect = self.image.get_rect().move(tile_width * pos_x,
+                                               tile_height * pos_y)
+
+
 class Obstacles(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
         super().__init__(tiles_obstacles, SPRITES)
@@ -299,6 +308,7 @@ def play_game():
             run2 = True
             run = False
         tiles_group.draw(SCREEN)
+        tiles_objects.draw(SCREEN)
         tiles_obstacles.draw(SCREEN)
         tiles_obstacles2.draw(SCREEN)
         player_group.draw(SCREEN)
@@ -332,6 +342,7 @@ def play_game():
         for sprite in SPRITES:
             camera.apply(sprite)
         tiles_group.draw(SCREEN)
+        tiles_objects.draw(SCREEN)
         tiles_obstacles.draw(SCREEN)
         tiles_obstacles2.draw(SCREEN)
         finish.draw(SCREEN)
@@ -341,25 +352,28 @@ def play_game():
         for bomb in bombs:
             bomb.draw(SCREEN)
             for s in tiles_obstacles2:
-                if bomb.x >= s.rect.x - player.rect.x + 150 \
+                if bomb.x >= s.rect.x - player.rect.x + 100 \
                         and s.rect.y <= bomb.y <= s.rect.y + 50:
+                    bombs = bombs[1:]
                     s.kill()
         if pygame.sprite.groupcollide(player_group, finish, False, False):
             level += 1
             run2 = False
             run3 = True
         if pygame.sprite.groupcollide(player_group, tiles_obstacles, False, False) \
-                or pygame.sprite.groupcollide(player_group, tiles_obstacles2, False, False):
+                or pygame.sprite.groupcollide(player_group,
+                                              tiles_obstacles2, False, False):
             run2 = False
             player_group.empty()
             tiles_obstacles.empty()
             tiles_group.empty()
             tiles_obstacles2.empty()
+            tiles_objects.empty()
             game_over()
         pygame.display.flip()
     man_f.rect.y = player.rect.y
     while run3:
-        clock.tick(3)
+        clock.tick(1)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
@@ -371,18 +385,16 @@ def play_game():
             tiles_obstacles2.empty()
             tiles_group.empty()
             finish.empty()
+            tiles_objects.empty()
             people_group.empty()
             finish_man.empty()
             play_game()
         tiles_group.draw(SCREEN)
+        tiles_objects.draw(SCREEN)
         tiles_obstacles.draw(SCREEN)
         player_group.draw(SCREEN)
         finish_man.draw(SCREEN)
         pygame.display.flip()
-
-
-def check_cross():
-    pass
 
 
 def game_over():
@@ -424,14 +436,15 @@ def generate_level(level):
         image = size_image('red_car.PNG', size=2)
     new_player, x, y, man, man_f = None, None, None, None, None
     dict_symbols = {'.': 'road', 'f': 'fountain', 'R': 'red_car',
-                    'W': 'white_car', 'B': 'blue_car', '1': 'home1',
-                    '2': 'home2', '3': 'home3', '4': 'home4',
-                    '5': 'home5', '6': 'home6', '7': 'home7',
-                    '8': 'home8', '9': 'home9', '0': 'home10',
-                    'e': 'home11', 't': 'home12', 'g': 'grass',
+                    'W': 'white_car', 'B': 'blue_car', 'g': 'grass',
                     '*': 'grass2', 's': 'stump', 'w': 'water',
                     'd': 'wood', 'r': 'rock', '-': 'flower1',
                     '+': 'flower2'}
+    objects_symbols = {'1': 'home1',
+                       '2': 'home2', '3': 'home3', '4': 'home4',
+                       '5': 'home5', '6': 'home6', '7': 'home7',
+                       '8': 'home8', '9': 'home9', '0': 'home10',
+                       'e': 'home11', 't': 'home12'}
     obstacles = {'&': 'stones', '%': 'stones2', '!': 'box'}
     obstacles2 = {'x': 'wall'}
     people = [size_image('man1.PNG', size=3), size_image('man2.PNG', size=3),
@@ -446,6 +459,9 @@ def generate_level(level):
             else:
                 if level[y][x] != ' ' and level[y][x] in dict_symbols:
                     Tile(dict_symbols[level[y][x]], x, y)
+                elif level[y][x] != ' ' and level[y][x] in objects_symbols:
+                    Tile('grass', x, y)
+                    Objects(objects_symbols[level[y][x]], x, y)
                 elif level[y][x] != ' ' and level[y][x] in obstacles:
                     Obstacles(obstacles[level[y][x]], x, y)
                 elif level[y][x] != ' ' and level[y][x] in obstacles2:
@@ -469,19 +485,19 @@ def terminate():
 dict_tiles = {'road': size_image('road.JPG'),
               'wood': size_image('wood2.PNG', size=3),
               'fountain': size_image('fountain.JPG'),
-              'home1': size_image('home1.JPG', size=1), 'home3':
-                  size_image('home3.JPG', size=1), 'home4':
-                  size_image('home4.JPG', size=4), 'home5':
-                  size_image('home5.JPG', size=1),
-              'home6': size_image('home6.JPG', size=1),
-              'home7': size_image('home7.JPG', size=4), 'home8': size_image('home8.JPG'),
-              'home9': size_image('home9.JPG', size=1), 'home10':
-                  size_image('home10.JPG', size=4),
-              'home12': size_image('home12.JPG', size=1),
               'water': size_image('water.JPG'), 'stump': size_image('stump.JPG'),
               'rock': size_image('rock.JPG'), 'flower1': size_image('flower1.JPG'),
               'flower2': size_image('flower2.JPG'), 'grass': size_image('grass.JPG'),
               'grass2': size_image('grass2.JPG'), 'finish': size_image('finish.gif')}
+objects = {'home1': size_image('home1.PNG', size=1), 'home3':
+           size_image('home3.PNG', size=1), 'home4':
+               size_image('home4.PNG', size=1), 'home5':
+               size_image('home5.PNG', size=1),
+           'home6': size_image('home6.PNG', size=1),
+           'home7': size_image('home7.PNG', size=1), 'home8': size_image('home8.PNG'),
+           'home9': size_image('home9.PNG', size=1), 'home10':
+               size_image('home10.PNG', size=1),
+           'home12': size_image('home12.PNG', size=1)}
 dict_obstacles = {'stones': size_image('stones.PNG', size=3),
                   'stones2': size_image('stones2.PNG', size=3),
                   'box': size_image('box.png')}
