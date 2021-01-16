@@ -39,7 +39,7 @@ def size_image(name, size=None):
     if size is None:
         image = pygame.transform.scale(load_image(name), (50, 50))
     elif size == 1:
-        image = pygame.transform.scale(load_image(name, colorkey=-1), (150, 150))
+        image = pygame.transform.scale(load_image(name, colorkey=-1), (160, 175))
     elif size == 2:
         image = pygame.transform.scale(load_image(name, colorkey=-1), (50, 100))
         image = pygame.transform.rotate(image, 90)
@@ -47,7 +47,15 @@ def size_image(name, size=None):
     elif size == 3:
         image = pygame.transform.scale(load_image(name, colorkey=-1), (50, 50))
     elif size == 4:
-        image = pygame.transform.scale(load_image(name), (150, 100))
+        image = pygame.transform.scale(load_image(name, colorkey=-1), (260, 250))
+    elif size == 5:
+        image = pygame.transform.scale(load_image(name, colorkey=-1), (300, 350))
+    elif size == 6:
+        image = pygame.transform.scale(load_image(name, colorkey=-1), (150, 300))
+    elif size == 7:
+        image = pygame.transform.scale(load_image(name, colorkey=-1), (280, 140))
+    elif size == 8:
+        image = pygame.transform.scale(load_image(name, colorkey=-1), (300, 200))
     return image
 
 
@@ -78,6 +86,7 @@ def start_game():
 
 
 def main_menu():
+    y = 100
     image_menu = pygame.transform.scale(load_image("Menu_game.jpg"),
                                         (WIDTH, HEIGHT))
     SCREEN.blit(image_menu, (0, 0))
@@ -85,21 +94,20 @@ def main_menu():
     font2 = pygame.font.Font(None, 50)
     text = font.render("Game menu", True, (0, 0, 255))
     text_x = WIDTH // 2 - text.get_width() // 2
+    for i in range(4):
+        pygame.draw.rect(SCREEN, (255, 255, 50), (200, y, 200, 50))
+        y += 100
     pygame.draw.rect(SCREEN, (255, 255, 255), (text_x - 10, 15, 300, 50))
     SCREEN.blit(text, (text_x, 20))
-    pygame.draw.rect(SCREEN, (255, 255, 50), (200, 100, 200, 50))
     text2 = font2.render("Rules", True, (153, 0, 255))
     text2_x = WIDTH // 2 - text2.get_width() // 2
     SCREEN.blit(text2, (text2_x, 110))
-    pygame.draw.rect(SCREEN, (255, 255, 50), (200, 200, 200, 50))
     text3 = font2.render("Start", True, (153, 0, 255))
     text3_x = WIDTH // 2 - text3.get_width() // 2
     SCREEN.blit(text3, (text3_x, 210))
-    pygame.draw.rect(SCREEN, (255, 255, 50), (200, 300, 200, 50))
     text4 = font2.render("Exit", True, (153, 0, 255))
     text4_x = WIDTH // 2 - text4.get_width() // 2
     SCREEN.blit(text4, (text4_x, 310))
-    pygame.draw.rect(SCREEN, (255, 255, 50), (200, 400, 200, 50))
     text5 = font2.render("Developers", True, (153, 0, 255))
     text5_x = WIDTH // 2 - text5.get_width() // 2
     SCREEN.blit(text5, (text5_x, 410))
@@ -299,11 +307,11 @@ def play_game():
     run2 = False
     run3 = False
     while run:
-        clock.tick(3)
+        clock.tick(8)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
-        man.rect.y += STEP
+        man.rect.y += 10
         if pygame.sprite.groupcollide(player_group, people_group, False, True):
             run2 = True
             run = False
@@ -373,11 +381,11 @@ def play_game():
         pygame.display.flip()
     man_f.rect.y = player.rect.y
     while run3:
-        clock.tick(1)
+        clock.tick(8)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
-        man_f.rect.y += STEP
+        man_f.rect.y += 10
         start_grass -= 1
         if start_grass == -5:
             player_group.empty()
@@ -435,8 +443,7 @@ def generate_level(level):
     elif car == 3:
         image = size_image('red_car.PNG', size=2)
     new_player, x, y, man, man_f = None, None, None, None, None
-    dict_symbols = {'.': 'road', 'f': 'fountain', 'R': 'red_car',
-                    'W': 'white_car', 'B': 'blue_car', 'g': 'grass',
+    dict_symbols = {'.': 'road', 'f': 'fountain', 'g': 'grass',
                     '*': 'grass2', 's': 'stump', 'w': 'water',
                     'd': 'wood', 'r': 'rock', '-': 'flower1',
                     '+': 'flower2'}
@@ -444,7 +451,10 @@ def generate_level(level):
                        '2': 'home2', '3': 'home3', '4': 'home4',
                        '5': 'home5', '6': 'home6', '7': 'home7',
                        '8': 'home8', '9': 'home9', '0': 'home10',
-                       'e': 'home11', 't': 'home12'}
+                       'a': 'home11', 'b': 'home12', 'c': 'home13',
+                       'd': 'home14', 'e': 'home15', 'f': 'home1',
+                       'i': 'home17', 'j': 'home18', 'n': 'home19',
+                       'k': 'home20'}
     obstacles = {'&': 'stones', '%': 'stones2', '!': 'box'}
     obstacles2 = {'x': 'wall'}
     people = [size_image('man1.PNG', size=3), size_image('man2.PNG', size=3),
@@ -452,26 +462,25 @@ def generate_level(level):
     image2 = random.choice(people)
     for y in range(len(level)):
         for x in range(len(level[y])):
-            if level[y][x] == 'R' or level[y][x] == 'B' or level[y][x] == 'W' \
-                    and level[y][x] != ' ':
+            if level[y][x] == 'C':
                 Tile('road', x, y)
                 new_player = PlayerCar(image, x, y)
             else:
-                if level[y][x] != ' ' and level[y][x] in dict_symbols:
+                if level[y][x] in dict_symbols:
                     Tile(dict_symbols[level[y][x]], x, y)
-                elif level[y][x] != ' ' and level[y][x] in objects_symbols:
+                elif level[y][x] in objects_symbols:
                     Tile('grass', x, y)
                     Objects(objects_symbols[level[y][x]], x, y)
-                elif level[y][x] != ' ' and level[y][x] in obstacles:
+                elif level[y][x] in obstacles:
                     Obstacles(obstacles[level[y][x]], x, y)
-                elif level[y][x] != ' ' and level[y][x] in obstacles2:
+                elif level[y][x] in obstacles2:
                     Obstacles2(obstacles2[level[y][x]], x, y)
-                elif level[y][x] != ' ' and level[y][x] == '@':
+                elif level[y][x] == '@':
                     Tile('grass', x, y)
                     man = Man(image2, x, y)
-                elif level[y][x] != ' ' and level[y][x] == '#':
+                elif level[y][x] == '#':
                     Finish(x, y)
-                elif level[y][x] != ' ' and level[y][x] == 'p':
+                elif level[y][x] == 'p':
                     Tile('road', x, y)
                     man_f = FinishMan(image2, x, y)
     return new_player, x, y, man, man_f
@@ -491,13 +500,18 @@ dict_tiles = {'road': size_image('road.JPG'),
               'grass2': size_image('grass2.JPG'), 'finish': size_image('finish.gif')}
 objects = {'home1': size_image('home1.PNG', size=1), 'home3':
            size_image('home3.PNG', size=1), 'home4':
-               size_image('home4.PNG', size=1), 'home5':
-               size_image('home5.PNG', size=1),
-           'home6': size_image('home6.PNG', size=1),
-           'home7': size_image('home7.PNG', size=1), 'home8': size_image('home8.PNG'),
-           'home9': size_image('home9.PNG', size=1), 'home10':
-               size_image('home10.PNG', size=1),
-           'home12': size_image('home12.PNG', size=1)}
+               size_image('home4.PNG', size=4), 'home5':
+               size_image('home5.PNG', size=4),
+           'home6': size_image('home6.PNG', size=4),
+           'home7': size_image('home7.PNG', size=4), 'home8': size_image('home8.PNG', size=5),
+           'home9': size_image('home9.PNG', size=5), 'home10':
+               size_image('home10.PNG', size=5),
+           'home12': size_image('home12.PNG', size=8), 'home13': size_image('home13.PNG', size=5),
+           'home14': size_image('home14.PNG', size=6), 'home15': size_image('home15.PNG'),
+           'home16': size_image('home16.PNG', size=6), 'home18': size_image('home18.PNG', size=1),
+           'home17': size_image('home17.PNG', size=4), 'home19': size_image('home19.PNG', size=7),
+           'home20': size_image('home20.JPG', size=7), 'home2': size_image('home2.PNG', size=1),
+           'home11': size_image('home11.PNG', size=8)}
 dict_obstacles = {'stones': size_image('stones.PNG', size=3),
                   'stones2': size_image('stones2.PNG', size=3),
                   'box': size_image('box.png')}
