@@ -4,7 +4,7 @@ import sys
 import random
 
 pygame.init()
-SIZE = WIDTH, HEIGHT = 600, 600
+SIZE = WIDTH, HEIGHT = 650, 650
 SCREEN = pygame.display.set_mode(SIZE)
 STEP = 50
 SPRITES = pygame.sprite.Group()
@@ -39,7 +39,7 @@ def size_image(name, size=None):
     if size is None:
         image = pygame.transform.scale(load_image(name), (50, 50))
     elif size == 1:
-        image = pygame.transform.scale(load_image(name, colorkey=-1), (160, 175))
+        image = pygame.transform.scale(load_image(name, colorkey=-1), (140, 150))
     elif size == 2:
         image = pygame.transform.scale(load_image(name, colorkey=-1), (50, 100))
         image = pygame.transform.rotate(image, 90)
@@ -47,13 +47,13 @@ def size_image(name, size=None):
     elif size == 3:
         image = pygame.transform.scale(load_image(name, colorkey=-1), (50, 50))
     elif size == 4:
-        image = pygame.transform.scale(load_image(name, colorkey=-1), (260, 250))
+        image = pygame.transform.scale(load_image(name, colorkey=-1), (200, 130))
     elif size == 5:
-        image = pygame.transform.scale(load_image(name, colorkey=-1), (300, 350))
+        image = pygame.transform.scale(load_image(name, colorkey=-1), (220, 170))
     elif size == 6:
-        image = pygame.transform.scale(load_image(name, colorkey=-1), (150, 300))
+        image = pygame.transform.scale(load_image(name, colorkey=-1), (180, 190))
     elif size == 7:
-        image = pygame.transform.scale(load_image(name, colorkey=-1), (280, 140))
+        image = pygame.transform.scale(load_image(name, colorkey=-1), (250, 420))
     elif size == 8:
         image = pygame.transform.scale(load_image(name, colorkey=-1), (300, 200))
     return image
@@ -70,16 +70,16 @@ def start_game():
     image = pygame.transform.scale(load_image("screen_game.JPG"),
                                    (WIDTH, HEIGHT))
     SCREEN.blit(image, (0, 0))
-    pygame.draw.rect(SCREEN, (255, 0, 0), (250, 530, 100, 50))
+    pygame.draw.rect(SCREEN, (255, 0, 0), (275, 550, 100, 50))
     font = pygame.font.Font(None, 50)
     text = font.render("PLAY", True, (0, 255, 127))
-    SCREEN.blit(text, (255, 540))
+    SCREEN.blit(text, (280, 560))
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if 250 <= event.pos[0] <= 350 and 530 <= event.pos[1] <= 580:
+                if 275 <= event.pos[0] <= 375 and 550 <= event.pos[1] <= 600:
                     main_menu()
                     return
         pygame.display.flip()
@@ -95,7 +95,7 @@ def main_menu():
     text = font.render("Game menu", True, (0, 0, 255))
     text_x = WIDTH // 2 - text.get_width() // 2
     for i in range(4):
-        pygame.draw.rect(SCREEN, (255, 255, 50), (200, y, 200, 50))
+        pygame.draw.rect(SCREEN, (255, 255, 50), (225, y, 200, 50))
         y += 100
     pygame.draw.rect(SCREEN, (255, 255, 255), (text_x - 10, 15, 300, 50))
     SCREEN.blit(text, (text_x, 20))
@@ -116,13 +116,13 @@ def main_menu():
             if event.type == pygame.QUIT:
                 terminate()
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if 200 <= event.pos[0] <= 400 and 100 <= event.pos[1] <= 150:
+                if 225 <= event.pos[0] <= 425 and 100 <= event.pos[1] <= 150:
                     rules_game()
                     return
-                if 200 <= event.pos[0] <= 400 and 300 <= event.pos[1] <= 350:
+                if 225 <= event.pos[0] <= 425 and 300 <= event.pos[1] <= 350:
                     terminate()
                     return
-                if 200 <= event.pos[0] <= 400 and 200 <= event.pos[1] <= 250:
+                if 225 <= event.pos[0] <= 425 and 200 <= event.pos[1] <= 250:
                     choose_car()
                     return
         pygame.display.flip()
@@ -159,17 +159,17 @@ def choose_car():
     text_x = WIDTH // 2 - text.get_width() // 2
     SCREEN.blit(text, (text_x, 20))
     image_car1 = pygame.transform.scale(load_image("car1.png"), (300, 100))
-    SCREEN.blit(image_car1, (150, 70))
+    SCREEN.blit(image_car1, (175, 70))
     image_car2 = pygame.transform.scale(load_image("car2.png"), (320, 180))
-    SCREEN.blit(image_car2, (150, 190))
+    SCREEN.blit(image_car2, (175, 190))
     image_car3 = pygame.transform.scale(load_image("car3.png"), (300, 180))
-    SCREEN.blit(image_car3, (150, 370))
+    SCREEN.blit(image_car3, (175, 370))
     text1 = font.render("1", True, (0, 0, 255))
     text2 = font.render("2", True, (0, 0, 0))
     text3 = font.render("3", True, (255, 0, 0))
-    SCREEN.blit(text1, (299, 190))
-    SCREEN.blit(text2, (299, 360))
-    SCREEN.blit(text3, (299, 550))
+    SCREEN.blit(text1, (322, 190))
+    SCREEN.blit(text2, (322, 360))
+    SCREEN.blit(text3, (322, 550))
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -263,9 +263,9 @@ class Shell:
 
 
 class Finish(pygame.sprite.Sprite):
-    def __init__(self, pos_x, pos_y):
+    def __init__(self, image, pos_x, pos_y):
         super().__init__(finish, SPRITES)
-        self.image = size_image('finish.gif')
+        self.image = image
         self.rect = self.image.get_rect().move(tile_width * pos_x,
                                                tile_height * pos_y)
         self.mask = pygame.mask.from_surface(self.image)
@@ -297,17 +297,18 @@ def play_game():
     levels = {1: 'level1.txt', 2: 'level2.txt', 3: 'level3.txt', 4: 'level4.txt',
               5: 'level5.txt', 6: 'level6.txt', 7: 'level7.txt', 8: 'level8.txt',
               9: 'level9.txt', 10: 'level10.txt', 11: 'level11.txt'}
-    player, level_x, level_y, man, man_f = generate_level(load_level(levels[level - 1]))
+    player, level_x, level_y, man, man_f, end = generate_level(load_level(levels[level - 1]))
     camera = Camera((level_x, level_y))
     font = pygame.font.Font(None, 50)
     text = font.render(str(level - 1), True, (0, 0, 0))
     start_grass = 0
+    speed = 5
     bombs = []
     run = True
     run2 = False
     run3 = False
     while run:
-        clock.tick(8)
+        clock.tick(10)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
@@ -323,24 +324,35 @@ def play_game():
         people_group.draw(SCREEN)
         pygame.display.flip()
     while run2:
-        clock.tick(5)
+        clock.tick(speed)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    if len(bombs) < 3:
+                        bombs.append(Shell(player.rect.x + 90,
+                                           player.rect.y + 25, 8, (random.randrange(0, 255),
+                                                                   random.randrange(0, 255),
+                                                                   random.randrange(0, 255))))
         player.rect.x += STEP
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_SPACE]:
-            if len(bombs) < 3:
-                bombs.append(Shell(player.rect.x + 40,
-                                   player.rect.y + 25, 8, (random.randrange(0, 255),
-                                                           random.randrange(0, 255),
-                                                           random.randrange(0, 255))))
         if keys[pygame.K_UP] and start_grass < 2:
             start_grass += 1
             player.rect.y -= STEP
         if keys[pygame.K_DOWN] and start_grass > -2:
             start_grass -= 1
             player.rect.y += STEP
+        if keys[pygame.K_LEFT] and speed != 1:
+            speed -= 1
+        else:
+            if speed != 5:
+                speed += 1
+        if keys[pygame.K_RIGHT] and speed != 10:
+            speed += 1
+        else:
+            if speed != 5:
+                speed -= 1
         for bomb in bombs:
             if bomb.x < 600:
                 bomb.x += bomb.speed
@@ -381,7 +393,7 @@ def play_game():
         pygame.display.flip()
     man_f.rect.y = player.rect.y
     while run3:
-        clock.tick(8)
+        clock.tick(10)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
@@ -442,10 +454,10 @@ def generate_level(level):
         image = size_image('white_car.PNG', size=2)
     elif car == 3:
         image = size_image('red_car.PNG', size=2)
-    new_player, x, y, man, man_f = None, None, None, None, None
+    new_player, x, y, man, man_f, end = None, None, None, None, None, None
     dict_symbols = {'.': 'road', 'f': 'fountain', 'g': 'grass',
                     '*': 'grass2', 's': 'stump', 'w': 'water',
-                    'd': 'wood', 'r': 'rock', '-': 'flower1',
+                    'z': 'wood', 'r': 'rock', '-': 'flower1',
                     '+': 'flower2'}
     objects_symbols = {'1': 'home1',
                        '2': 'home2', '3': 'home3', '4': 'home4',
@@ -479,11 +491,11 @@ def generate_level(level):
                     Tile('grass', x, y)
                     man = Man(image2, x, y)
                 elif level[y][x] == '#':
-                    Finish(x, y)
+                    end = Finish(size_image('finish.gif'), x, y)
                 elif level[y][x] == 'p':
                     Tile('road', x, y)
                     man_f = FinishMan(image2, x, y)
-    return new_player, x, y, man, man_f
+    return new_player, x, y, man, man_f, end
 
 
 def terminate():
@@ -503,15 +515,15 @@ objects = {'home1': size_image('home1.PNG', size=1), 'home3':
                size_image('home4.PNG', size=4), 'home5':
                size_image('home5.PNG', size=4),
            'home6': size_image('home6.PNG', size=4),
-           'home7': size_image('home7.PNG', size=4), 'home8': size_image('home8.PNG', size=5),
+           'home7': size_image('home7.PNG', size=5), 'home8': size_image('home8.PNG', size=5),
            'home9': size_image('home9.PNG', size=5), 'home10':
-               size_image('home10.PNG', size=5),
-           'home12': size_image('home12.PNG', size=8), 'home13': size_image('home13.PNG', size=5),
+               size_image('home10.PNG', size=6),
+           'home12': size_image('home12.PNG', size=6), 'home13': size_image('home13.PNG', size=6),
            'home14': size_image('home14.PNG', size=6), 'home15': size_image('home15.PNG'),
            'home16': size_image('home16.PNG', size=6), 'home18': size_image('home18.PNG', size=1),
            'home17': size_image('home17.PNG', size=4), 'home19': size_image('home19.PNG', size=7),
-           'home20': size_image('home20.JPG', size=7), 'home2': size_image('home2.PNG', size=1),
-           'home11': size_image('home11.PNG', size=8)}
+           'home20': size_image('home20.PNG', size=7), 'home2': size_image('home2.PNG', size=1),
+           'home11': size_image('home11.PNG', size=5)}
 dict_obstacles = {'stones': size_image('stones.PNG', size=3),
                   'stones2': size_image('stones2.PNG', size=3),
                   'box': size_image('box.png')}
