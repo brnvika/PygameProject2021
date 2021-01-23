@@ -18,6 +18,7 @@ people_group = pygame.sprite.Group()
 finish = pygame.sprite.Group()
 finish_man = pygame.sprite.Group()
 timer_object = pygame.sprite.Group()
+tiles_monsters = pygame.sprite.Group()
 clock = pygame.time.Clock()
 pygame.time.set_timer(pygame.USEREVENT, 1000)
 
@@ -140,8 +141,8 @@ def main_menu():
 def about_develops():
     image = pygame.transform.scale(load_image("develops.jpg"), (WIDTH, HEIGHT))
     SCREEN.blit(image, (0, 0))
-    words = ['Игра разработана учениками', 'ЯНДЕКС ЛИЦЕЯ:', '       - Баранова Виктория',
-             '       - Савин Григорий', '                2021 год']
+    words = ['DEVELOPERS:', '   - Baranova Viktoria',
+             '  - Savin Gregory', '         2021']
     font = pygame.font.Font(None, 40)
     font2 = pygame.font.Font(None, 55)
     text = font.render("Close", True, (255, 129, 0))
@@ -290,6 +291,15 @@ class OtherCars(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
 
+class Monsters(pygame.sprite.Sprite):
+    def __init__(self, image, pos_x, pos_y):
+        super().__init__(tiles_monsters, SPRITES)
+        self.image = image
+        self.rect = self.image.get_rect().move(tile_width * pos_x,
+                                               tile_height * pos_y)
+        self.mask = pygame.mask.from_surface(self.image)
+
+
 class Man(pygame.sprite.Sprite):
     def __init__(self, image, pos_x, pos_y):
         super().__init__(people_group, SPRITES)
@@ -354,7 +364,7 @@ def play_game():
     levels = {1: 'level1.txt', 2: 'level2.txt', 3: 'level3.txt', 4: 'level4.txt',
               5: 'level5.txt', 6: 'level6.txt', 7: 'level7.txt', 8: 'level8.txt',
               9: 'level9.txt', 10: 'level10.txt', 11: 'level11.txt'}
-    player, level_x, level_y, man, man_f, end, other_car, time = \
+    player, level_x, level_y, man, man_f, end, other_car, time, monster = \
         generate_level(load_level(levels[level - 1]))
     camera = Camera((level_x, level_y))
     font = pygame.font.Font(None, 50)
@@ -402,6 +412,9 @@ def play_game():
                     start_grass -= 1
                     player.rect.y += tile_height
         player.rect.x += STEP
+        if monster:
+            clock.tick(30)
+            monster.rect.y += 10
         if other_car:
             other_car.rect.x -= STEP
         keys = pygame.key.get_pressed()
@@ -448,6 +461,10 @@ def play_game():
             run2 = False
             delete_tiles()
             game_over()
+        if pygame.sprite.groupcollide(player_group, cars, False, False):
+            run2 = False
+            delete_tiles()
+            game_over()
         if pygame.sprite.groupcollide(player_group, timer_object, False, True):
             seconds += 5
         pygame.display.flip()
@@ -478,6 +495,7 @@ def delete_tiles():
     finish_man.empty()
     cars.empty()
     timer_object.empty()
+    tiles_monsters.empty()
 
 
 def draw_tiles():
@@ -488,6 +506,7 @@ def draw_tiles():
     player_group.draw(SCREEN)
     cars.draw(SCREEN)
     timer_object.draw(SCREEN)
+    tiles_monsters.draw(SCREEN)
 
 
 def game_over():
@@ -527,8 +546,8 @@ def generate_level(level):
         image = size_image('white_car.PNG', size=2)
     elif car == 3:
         image = size_image('red_car.PNG', size=2)
-    new_player, x, y, man, man_f, end, other_car, time = \
-        None, None, None, None, None, None, None, None
+    new_player, x, y, man, man_f, end, other_car, time, monster = \
+        None, None, None, None, None, None, None, None, None
     dict_symbols = {'.': 'road', 'f': 'fountain', 'g': 'grass',
                     '*': 'grass2', 's': 'stump', 'w': 'water',
                     'z': 'wood', 'r': 'rock', '-': 'flower1',
@@ -545,7 +564,17 @@ def generate_level(level):
     obstacles2 = {'x': 'wall'}
     people = [size_image('man1.PNG', size=3), size_image('man2.PNG', size=3),
               size_image('man3.PNG', size=3)]
-    arr_cars = [size_image('blue_car.PNG', size=9), size_image('white_car.PNG', size=9)]
+    arr_cars = [size_image('car4.PNG', size=9), size_image('car5.PNG', size=9),
+                size_image('car6.PNG', size=9), size_image('car7.PNG', size=9),
+                size_image('car8.PNG', size=9), size_image('car9.PNG', size=9),
+                size_image('car10.PNG', size=9), size_image('car11.PNG', size=9),
+                size_image('car12.PNG', size=9), size_image('car13.PNG', size=9),
+                size_image('car14.PNG', size=9), size_image('car15.PNG', size=9),
+                size_image('car16.PNG', size=9), size_image('car17.PNG', size=9)]
+    arr_monsters = [size_image('monster1.PNG', size=3), size_image('monster2.PNG', size=3),
+                    size_image('monster3.PNG', size=3), size_image('monster4.PNG', size=3),
+                    size_image('monster5.PNG', size=3), size_image('monster6.PNG', size=3),
+                    size_image('monster7.PNG', size=3)]
     image_man = random.choice(people)
     for y in range(len(level)):
         for x in range(len(level[y])):
@@ -576,7 +605,10 @@ def generate_level(level):
                 elif level[y][x] == 't':
                     Tile('road', x, y)
                     time = Timer(size_image('timer.PNG', size=3), x, y)
-    return new_player, x, y, man, man_f, end, other_car, time
+                elif level[y][x] == 'M':
+                    Tile('road', x, y)
+                    monster = Monsters(random.choice(arr_monsters), x, y)
+    return new_player, x, y, man, man_f, end, other_car, time, monster
 
 
 def terminate():
