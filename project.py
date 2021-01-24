@@ -364,12 +364,13 @@ def play_game():
     levels = {1: 'level1.txt', 2: 'level2.txt', 3: 'level3.txt', 4: 'level4.txt',
               5: 'level5.txt', 6: 'level6.txt', 7: 'level7.txt', 8: 'level8.txt',
               9: 'level9.txt', 10: 'level10.txt', 11: 'level11.txt'}
-    player, level_x, level_y, man, man_f, end, other_car, time, monster = \
+    player, level_x, level_y, man, man_f, end, other_cars, time, monsters = \
         generate_level(load_level(levels[level - 1]))
     camera = Camera((level_x, level_y))
     font = pygame.font.Font(None, 50)
     num_level = font.render('level: ' + str(level - 1), True, (0, 0, 0))
-    start_grass = 0
+    traffic_car = 0
+    traffic_monster = True
     speed = 10
     seconds = 30
     bombs = []
@@ -397,6 +398,7 @@ def play_game():
                 if seconds > 0:
                     seconds -= 1
                 elif seconds == 0:
+                    delete_tiles()
                     game_over()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
@@ -405,18 +407,26 @@ def play_game():
                                            player.rect.y + 25, 8, (random.randrange(0, 255),
                                                                    random.randrange(0, 255),
                                                                    random.randrange(0, 255))))
-                if event.key == pygame.K_UP and start_grass < 2:
-                    start_grass += 1
+                if event.key == pygame.K_UP and traffic_car < 2:
+                    traffic_car += 1
                     player.rect.y -= tile_height
-                if event.key == pygame.K_DOWN and start_grass > -2:
-                    start_grass -= 1
+                if event.key == pygame.K_DOWN and traffic_car > -2:
+                    traffic_car -= 1
                     player.rect.y += tile_height
         player.rect.x += STEP
-        if monster:
-            clock.tick(30)
-            monster.rect.y += 10
-        if other_car:
-            other_car.rect.x -= STEP
+        if len(monsters) >= 1:
+            for monster in monsters:
+                if monster.rect.y == 400:
+                    traffic_monster = False
+                elif monster.rect.y == 200:
+                    traffic_monster = True
+                if traffic_monster:
+                    monster.rect.y += 10
+                else:
+                    monster.rect.y -= 10
+        if other_cars:
+            for other_car in other_cars:
+                other_car.rect.x -= STEP
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT] and speed != 1:
             speed -= 1
@@ -451,6 +461,11 @@ def play_game():
                         and s.rect.y <= bomb.y <= s.rect.y + 50:
                     bombs = bombs[1:]
                     s.kill()
+            for m in tiles_monsters:
+                if bomb.x >= m.rect.x - player.rect.x + 100 \
+                        and m.rect.y <= bomb.y <= m.rect.y + 50:
+                    bombs = bombs[1:]
+                    m.kill()
         if pygame.sprite.groupcollide(player_group, finish, False, False):
             level += 1
             run2 = False
@@ -467,6 +482,10 @@ def play_game():
             game_over()
         if pygame.sprite.groupcollide(player_group, timer_object, False, True):
             seconds += 5
+        if pygame.sprite.groupcollide(player_group, tiles_monsters, False, False):
+            run2 = False
+            delete_tiles()
+            game_over()
         pygame.display.flip()
     man_f.rect.y = player.rect.y
     while run3:
@@ -475,8 +494,8 @@ def play_game():
             if event.type == pygame.QUIT:
                 terminate()
         man_f.rect.y += 10
-        start_grass -= 1
-        if start_grass == -5:
+        traffic_car -= 1
+        if traffic_car == -5:
             delete_tiles()
             play_game()
         draw_tiles()
@@ -546,20 +565,20 @@ def generate_level(level):
         image = size_image('white_car.PNG', size=2)
     elif car == 3:
         image = size_image('red_car.PNG', size=2)
-    new_player, x, y, man, man_f, end, other_car, time, monster = \
-        None, None, None, None, None, None, None, None, None
-    dict_symbols = {'.': 'road', 'f': 'fountain', 'g': 'grass',
-                    '*': 'grass2', 's': 'stump', 'w': 'water',
-                    'z': 'wood', 'r': 'rock', '-': 'flower1',
-                    '+': 'flower2'}
-    objects_symbols = {'1': 'home1',
+    new_player, x, y, man, man_f, end, time = \
+        None, None, None, None, None, None, None
+    monsters = []
+    other_cars = []
+    dict_symbols = {'g': 'grass', '*': 'grass2', 's': 'stump', 'w': 'water',
+                    'z': 'wood', 'r': 'rock', '-': 'flower1', '+': 'flower2',
+                    '.': 'road'}
+    objects_symbols = {'1': 'home1', 'k': 'home20',
                        '2': 'home2', '3': 'home3', '4': 'home4',
                        '5': 'home5', '6': 'home6', '7': 'home7',
                        '8': 'home8', '9': 'home9', '0': 'home10',
                        'a': 'home11', 'b': 'home12', 'c': 'home13',
                        'd': 'home14', 'e': 'home15', 'f': 'home1',
-                       'i': 'home17', 'j': 'home18', 'n': 'home19',
-                       'k': 'home20'}
+                       'i': 'home17', 'j': 'home18', 'n': 'home19'}
     obstacles = {'&': 'stones', '%': 'stones2', '!': 'box'}
     obstacles2 = {'x': 'wall'}
     people = [size_image('man1.PNG', size=3), size_image('man2.PNG', size=3),
@@ -601,14 +620,14 @@ def generate_level(level):
                     man_f = FinishMan(image_man, x, y)
                 elif level[y][x] == '?':
                     Tile('road', x, y)
-                    other_car = OtherCars(random.choice(arr_cars), x, y)
+                    other_cars.append(OtherCars(random.choice(arr_cars), x, y))
                 elif level[y][x] == 't':
                     Tile('road', x, y)
                     time = Timer(size_image('timer.PNG', size=3), x, y)
                 elif level[y][x] == 'M':
                     Tile('road', x, y)
-                    monster = Monsters(random.choice(arr_monsters), x, y)
-    return new_player, x, y, man, man_f, end, other_car, time, monster
+                    monsters.append(Monsters(random.choice(arr_monsters), x, y))
+    return new_player, x, y, man, man_f, end, other_cars, time, monsters
 
 
 def terminate():
@@ -617,26 +636,20 @@ def terminate():
 
 
 dict_tiles = {'road': size_image('road.JPG'),
-              'wood': size_image('wood2.PNG', size=3),
-              'fountain': size_image('fountain.JPG'),
               'water': size_image('water.JPG'), 'stump': size_image('stump.JPG'),
               'rock': size_image('rock.JPG'), 'flower1': size_image('flower1.JPG'),
               'flower2': size_image('flower2.JPG'), 'grass': size_image('grass.JPG'),
-              'grass2': size_image('grass2.JPG'), 'finish': size_image('finish.gif')}
-objects = {'home1': size_image('home1.PNG', size=1), 'home3':
-    size_image('home3.PNG', size=1), 'home4':
-               size_image('home4.PNG', size=4), 'home5':
-               size_image('home5.PNG', size=4),
-           'home6': size_image('home6.PNG', size=4),
-           'home7': size_image('home7.PNG', size=5), 'home8': size_image('home8.PNG', size=5),
-           'home9': size_image('home9.PNG', size=5), 'home10':
-               size_image('home10.PNG', size=6),
+              'grass2': size_image('grass2.JPG')}
+objects = {'home1': size_image('home1.PNG', size=1), 'home3': size_image('home3.PNG', size=1),
+           'home4': size_image('home4.PNG', size=4), 'home5': size_image('home5.PNG', size=4),
+           'home6': size_image('home6.PNG', size=1), 'home7': size_image('home7.PNG', size=5),
+           'home8': size_image('home8.PNG', size=5), 'home9': size_image('home9.PNG', size=5),
+           'home10': size_image('home10.PNG', size=6), 'home11': size_image('home11.PNG', size=5),
            'home12': size_image('home12.PNG', size=6), 'home13': size_image('home13.PNG', size=6),
            'home14': size_image('home14.PNG', size=6), 'home15': size_image('home15.PNG'),
            'home16': size_image('home16.PNG', size=6), 'home18': size_image('home18.PNG', size=1),
            'home17': size_image('home17.PNG', size=4), 'home19': size_image('home19.PNG', size=7),
-           'home20': size_image('home20.PNG', size=7), 'home2': size_image('home2.PNG', size=1),
-           'home11': size_image('home11.PNG', size=5)}
+           'home20': size_image('home20.PNG', size=7), 'home2': size_image('home2.PNG', size=1)}
 dict_obstacles = {'stones': size_image('stones.PNG', size=3),
                   'stones2': size_image('stones2.PNG', size=3),
                   'box': size_image('box.png')}
