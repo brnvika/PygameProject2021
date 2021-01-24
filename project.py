@@ -1,13 +1,13 @@
-import pygame
-import os
-import sys
-import random
+import pygame  # библиотека для разработки 2D игр
+import os  # библиотека для получения файлов
+import sys  # обеспечивает доступ к некоторым переменным и функциям
+import random  # библиотека для рандомного выбора
 
 pygame.init()
-SIZE = WIDTH, HEIGHT = 650, 650
+SIZE = WIDTH, HEIGHT = 650, 650  # размеры окна
 SCREEN = pygame.display.set_mode(SIZE)
-STEP = 25
-SPRITES = pygame.sprite.Group()
+STEP = 25  # шаг
+SPRITES = pygame.sprite.Group()  # группы спрайтов
 tiles_group = pygame.sprite.Group()
 tiles_objects = pygame.sprite.Group()
 tiles_obstacles = pygame.sprite.Group()
@@ -19,11 +19,16 @@ finish = pygame.sprite.Group()
 finish_man = pygame.sprite.Group()
 timer_object = pygame.sprite.Group()
 tiles_monsters = pygame.sprite.Group()
-clock = pygame.time.Clock()
-pygame.time.set_timer(pygame.USEREVENT, 1000)
+trains = pygame.sprite.Group()
+clock = pygame.time.Clock()  # счетчик времени
+timer = pygame.USEREVENT + 1  # таймеры
+pygame.time.set_timer(timer, 1000)
+timer2 = pygame.USEREVENT + 2
+timer3 = pygame.USEREVENT + 3
+timer4 = pygame.USEREVENT + 4
 
 
-def load_image(name, colorkey=None):
+def load_image(name, colorkey=None):  # загрузка изображений
     fullname = os.path.join('images', name)
     if not os.path.isfile(fullname):
         print(f"Файл с изображением '{fullname}' не найден")
@@ -39,7 +44,7 @@ def load_image(name, colorkey=None):
     return image
 
 
-def size_image(name, size=None):
+def size_image(name, size=None):  # получение нужного размера тайла
     if size is None:
         image = pygame.transform.scale(load_image(name), (50, 50))
     elif size == 1:
@@ -63,17 +68,21 @@ def size_image(name, size=None):
     elif size == 9:
         image = pygame.transform.scale(load_image(name, colorkey=-1), (50, 100))
         image = pygame.transform.rotate(image, 90)
+    elif size == 10:
+        image = pygame.transform.scale(load_image(name, colorkey=-1), (50, 300))
     return image
 
 
-def load_level(filename):
+def load_level(filename):  # загрузка уровней
     filename = "levels/" + filename
     with open(filename, 'r') as mapFile:
         level_map = [line.strip() for line in mapFile]
     return level_map
 
 
-def start_game():
+def start_game():  # начало игры
+    pygame.mixer.music.load('music/sound2.mp3')
+    pygame.mixer.music.play(-1)
     image = pygame.transform.scale(load_image("screen_game.JPG"),
                                    (WIDTH, HEIGHT))
     SCREEN.blit(image, (0, 0))
@@ -87,12 +96,15 @@ def start_game():
                 terminate()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if 275 <= event.pos[0] <= 375 and 550 <= event.pos[1] <= 600:
+                    pygame.mixer.music.stop()
                     main_menu()
                     return
         pygame.display.flip()
 
 
-def main_menu():
+def main_menu():  # главное меню
+    pygame.mixer.music.load('music/sound1.mp3')
+    pygame.mixer.music.play(-1)
     y = 100
     image_menu = pygame.transform.scale(load_image("Menu_game.jpg"),
                                         (WIDTH, HEIGHT))
@@ -138,11 +150,10 @@ def main_menu():
         pygame.display.flip()
 
 
-def about_develops():
+def about_develops():  # окно разработчиков
     image = pygame.transform.scale(load_image("develops.jpg"), (WIDTH, HEIGHT))
     SCREEN.blit(image, (0, 0))
-    words = ['DEVELOPERS:', '   - Baranova Viktoria',
-             '  - Savin Gregory', '         2021']
+    words = ['DEVELOPERS:', '   - Baranova Viktoria']
     font = pygame.font.Font(None, 40)
     font2 = pygame.font.Font(None, 55)
     text = font.render("Close", True, (255, 129, 0))
@@ -164,7 +175,7 @@ def about_develops():
         pygame.display.flip()
 
 
-def rules_game():
+def rules_game():  # правила игры
     image = pygame.transform.scale(load_image("rules.jpg"), (WIDTH, HEIGHT))
     SCREEN.blit(image, (0, 0))
     font = pygame.font.Font(None, 40)
@@ -185,7 +196,7 @@ def rules_game():
 car = 0
 
 
-def choose_car():
+def choose_car():  # выбор машины
     global car
     image = pygame.transform.scale(load_image("choose_car.jpg"),
                                    (WIDTH, HEIGHT))
@@ -213,20 +224,23 @@ def choose_car():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_1:
                     car = 1
+                    pygame.mixer.music.stop()
                     play_game()
                     return
                 elif event.key == pygame.K_2:
                     car = 2
+                    pygame.mixer.music.stop()
                     play_game()
                     return
                 elif event.key == pygame.K_3:
                     car = 3
+                    pygame.mixer.music.stop()
                     play_game()
                     return
         pygame.display.flip()
 
 
-class Tile(pygame.sprite.Sprite):
+class Tile(pygame.sprite.Sprite):  # тайлы фона
     def __init__(self, tile_type, pos_x, pos_y):
         super().__init__(tiles_group, SPRITES)
         self.image = dict_tiles[tile_type]
@@ -234,7 +248,7 @@ class Tile(pygame.sprite.Sprite):
                                                tile_height * pos_y)
 
 
-class Objects(pygame.sprite.Sprite):
+class Objects(pygame.sprite.Sprite):  # тайлы объектов
     def __init__(self, tile_type, pos_x, pos_y):
         super().__init__(tiles_objects, SPRITES)
         self.image = objects[tile_type]
@@ -242,7 +256,7 @@ class Objects(pygame.sprite.Sprite):
                                                tile_height * pos_y)
 
 
-class Obstacles(pygame.sprite.Sprite):
+class Obstacles(pygame.sprite.Sprite):  # тайлы препятствий 1
     def __init__(self, tile_type, pos_x, pos_y):
         super().__init__(tiles_obstacles, SPRITES)
         self.image = dict_obstacles[tile_type]
@@ -255,7 +269,7 @@ class Obstacles(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
 
-class Obstacles2(pygame.sprite.Sprite):
+class Obstacles2(pygame.sprite.Sprite):  # тайлы препятствий 2
     def __init__(self, tile_type, pos_x, pos_y):
         super().__init__(tiles_obstacles2, SPRITES)
         self.image = dict_obstacles2[tile_type]
@@ -264,7 +278,7 @@ class Obstacles2(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
 
-class Timer(pygame.sprite.Sprite):
+class Timer(pygame.sprite.Sprite):  # тайл увеличения времени
     def __init__(self, image, pos_x, pos_y):
         super().__init__(timer_object, SPRITES)
         self.image = image
@@ -273,7 +287,7 @@ class Timer(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
 
-class PlayerCar(pygame.sprite.Sprite):
+class PlayerCar(pygame.sprite.Sprite):  # игрок
     def __init__(self, image, pos_x, pos_y):
         super().__init__(player_group, SPRITES)
         self.image = image
@@ -282,7 +296,7 @@ class PlayerCar(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
 
-class OtherCars(pygame.sprite.Sprite):
+class OtherCars(pygame.sprite.Sprite):  # машины
     def __init__(self, image, pos_x, pos_y):
         super().__init__(cars, SPRITES)
         self.image = image
@@ -291,7 +305,16 @@ class OtherCars(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
 
-class Monsters(pygame.sprite.Sprite):
+class Trains(pygame.sprite.Sprite):  # поезда
+    def __init__(self, image, pos_x, pos_y):
+        super().__init__(trains, SPRITES)
+        self.image = image
+        self.rect = self.image.get_rect().move(tile_width * pos_x,
+                                               tile_height * pos_y)
+        self.mask = pygame.mask.from_surface(self.image)
+
+
+class Monsters(pygame.sprite.Sprite):  # монстры
     def __init__(self, image, pos_x, pos_y):
         super().__init__(tiles_monsters, SPRITES)
         self.image = image
@@ -300,7 +323,7 @@ class Monsters(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
 
-class Man(pygame.sprite.Sprite):
+class Man(pygame.sprite.Sprite):  # заказчик такси 1
     def __init__(self, image, pos_x, pos_y):
         super().__init__(people_group, SPRITES)
         self.image = image
@@ -309,7 +332,7 @@ class Man(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
 
-class FinishMan(pygame.sprite.Sprite):
+class FinishMan(pygame.sprite.Sprite):  # заказчик такси 2
     def __init__(self, image, pos_x, pos_y):
         super().__init__(finish_man, SPRITES)
         self.image = image
@@ -317,19 +340,19 @@ class FinishMan(pygame.sprite.Sprite):
                                                tile_height * pos_y)
 
 
-class Shell:
+class Shell:  # снаряды
     def __init__(self, x, y, radius, color):
         self.x = x
         self.y = y
         self.radius = radius
         self.color = color
-        self.speed = 20
+        self.speed = 30
 
     def draw(self, SCREEN):
         pygame.draw.circle(SCREEN, self.color, (self.x, self.y), self.radius)
 
 
-class Finish(pygame.sprite.Sprite):
+class Finish(pygame.sprite.Sprite):  # конец уровня
     def __init__(self, image, pos_x, pos_y):
         super().__init__(finish, SPRITES)
         self.image = image
@@ -338,7 +361,7 @@ class Finish(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
 
-class Camera:
+class Camera:  # камера
     def __init__(self, size):
         self.dx = 0
         self.dy = 0
@@ -359,16 +382,20 @@ class Camera:
 level = 2
 
 
-def play_game():
+def play_game():  # основной цикл игры
     global level
     levels = {1: 'level1.txt', 2: 'level2.txt', 3: 'level3.txt', 4: 'level4.txt',
               5: 'level5.txt', 6: 'level6.txt', 7: 'level7.txt', 8: 'level8.txt',
-              9: 'level9.txt', 10: 'level10.txt', 11: 'level11.txt'}
-    player, level_x, level_y, man, man_f, end, other_cars, time, monsters = \
+              9: 'level9.txt', 10: 'level10.txt'}
+    speed_player = {1: 10, 2: 1, 3: 12, 4: 14, 5: 16, 6: 18, 7: 20, 8: 22, 9: 24, 10: 26}
+    player, level_x, level_y, man, man_f, end, other_cars, time, monsters, locomotives = \
         generate_level(load_level(levels[level - 1]))
     camera = Camera((level_x, level_y))
     font = pygame.font.Font(None, 50)
     num_level = font.render('level: ' + str(level - 1), True, (0, 0, 0))
+    pygame.time.set_timer(timer2, 100)
+    pygame.time.set_timer(timer3, 80)
+    pygame.time.set_timer(timer4, 75)
     traffic_car = 0
     traffic_monster = True
     speed = 10
@@ -394,39 +421,41 @@ def play_game():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
-            if event.type == pygame.USEREVENT:
+            if event.type == pygame.USEREVENT + 1:
                 if seconds > 0:
                     seconds -= 1
                 elif seconds == 0:
                     delete_tiles()
                     game_over()
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    if len(bombs) < 3:
-                        bombs.append(Shell(player.rect.x + 90,
-                                           player.rect.y + 25, 8, (random.randrange(0, 255),
-                                                                   random.randrange(0, 255),
-                                                                   random.randrange(0, 255))))
+            if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP and traffic_car < 2:
                     traffic_car += 1
                     player.rect.y -= tile_height
                 if event.key == pygame.K_DOWN and traffic_car > -2:
                     traffic_car -= 1
                     player.rect.y += tile_height
+            if event.type == pygame.USEREVENT + 2:
+                if len(monsters) >= 1:
+                    for monster in monsters:
+                        if monster.rect.y == 400:
+                            traffic_monster = False
+                        elif monster.rect.y == 200:
+                            traffic_monster = True
+                        if traffic_monster:
+                            monster.rect.y += 10
+                        else:
+                            monster.rect.y -= 10
+            if event.type == pygame.USEREVENT + 3:
+                if other_cars:
+                    for other_car in other_cars:
+                        other_car.rect.x -= STEP
+            if event.type == pygame.USEREVENT + 4:
+                if len(locomotives) >= 1:
+                    for locomotive in locomotives:
+                        if locomotive.rect.y <= 600:
+                            if abs(locomotive.rect.x - player.rect.x) <= 400:
+                                locomotive.rect.y -= 10
         player.rect.x += STEP
-        if len(monsters) >= 1:
-            for monster in monsters:
-                if monster.rect.y == 400:
-                    traffic_monster = False
-                elif monster.rect.y == 200:
-                    traffic_monster = True
-                if traffic_monster:
-                    monster.rect.y += 10
-                else:
-                    monster.rect.y -= 10
-        if other_cars:
-            for other_car in other_cars:
-                other_car.rect.x -= STEP
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT] and speed != 1:
             speed -= 1
@@ -439,10 +468,16 @@ def play_game():
             if speed > 10:
                 speed -= 1
         for bomb in bombs:
-            if bomb.x < 600:
+            if bomb.x < 700:
                 bomb.x += bomb.speed
             else:
                 bombs.pop(bombs.index(bomb))
+        if keys[pygame.K_SPACE]:
+            if len(bombs) < 3:
+                bombs.append(Shell(player.rect.x + 90,
+                                   player.rect.y + 25, 8, (random.randrange(0, 255),
+                                                           random.randrange(0, 255),
+                                                           random.randrange(0, 255))))
         camera.update(player)
         for sprite in SPRITES:
             camera.apply(sprite)
@@ -450,10 +485,10 @@ def play_game():
         finish.draw(SCREEN)
         SCREEN.blit(num_level, (10, 10))
         if seconds <= 10:
-            timer = font.render('time: ' + str(seconds), True, (255, 0, 100))
+            timer_text = font.render('time: ' + str(seconds), True, (255, 0, 100))
         else:
-            timer = font.render('time: ' + str(seconds), True, (0, 255, 0))
-        SCREEN.blit(timer, (250, 10))
+            timer_text = font.render('time: ' + str(seconds), True, (0, 255, 0))
+        SCREEN.blit(timer_text, (250, 10))
         for bomb in bombs:
             bomb.draw(SCREEN)
             for s in tiles_obstacles2:
@@ -487,23 +522,23 @@ def play_game():
             delete_tiles()
             game_over()
         pygame.display.flip()
-    man_f.rect.y = player.rect.y
+    man_f.rect.y = player.rect.y + 50
     while run3:
         clock.tick(10)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
         man_f.rect.y += 10
-        traffic_car -= 1
-        if traffic_car == -5:
+        if man_f.rect.y == 500:
             delete_tiles()
             play_game()
+            return
         draw_tiles()
         finish_man.draw(SCREEN)
         pygame.display.flip()
 
 
-def delete_tiles():
+def delete_tiles():  # удаление тайлов
     player_group.empty()
     tiles_obstacles.empty()
     tiles_obstacles2.empty()
@@ -515,9 +550,10 @@ def delete_tiles():
     cars.empty()
     timer_object.empty()
     tiles_monsters.empty()
+    trains.empty()
 
 
-def draw_tiles():
+def draw_tiles():  # отображение тайлов
     tiles_group.draw(SCREEN)
     tiles_objects.draw(SCREEN)
     tiles_obstacles.draw(SCREEN)
@@ -526,9 +562,10 @@ def draw_tiles():
     cars.draw(SCREEN)
     timer_object.draw(SCREEN)
     tiles_monsters.draw(SCREEN)
+    trains.draw(SCREEN)
 
 
-def game_over():
+def game_over():  # экран проигрыша
     image = pygame.transform.scale(load_image("game_over.jpg"),
                                    (400, 400))
     SCREEN.blit(image, (100, 100))
@@ -553,11 +590,11 @@ def game_over():
         pygame.display.flip()
 
 
-def restart():
+def restart():  # начать заново уровень
     play_game()
 
 
-def generate_level(level):
+def generate_level(level):  # генерация уровня
     global car
     if car == 1:
         image = size_image('blue_car.PNG', size=2)
@@ -569,9 +606,10 @@ def generate_level(level):
         None, None, None, None, None, None, None
     monsters = []
     other_cars = []
-    dict_symbols = {'g': 'grass', '*': 'grass2', 's': 'stump', 'w': 'water',
+    locomotives = []
+    dict_symbols = {'g': 'grass', '*': 'grass2', 's': 'stump',
                     'z': 'wood', 'r': 'rock', '-': 'flower1', '+': 'flower2',
-                    '.': 'road'}
+                    '.': 'road', '$': 'train_road', '/': 'bridge'}
     objects_symbols = {'1': 'home1', 'k': 'home20',
                        '2': 'home2', '3': 'home3', '4': 'home4',
                        '5': 'home5', '6': 'home6', '7': 'home7',
@@ -579,7 +617,7 @@ def generate_level(level):
                        'a': 'home11', 'b': 'home12', 'c': 'home13',
                        'd': 'home14', 'e': 'home15', 'f': 'home1',
                        'i': 'home17', 'j': 'home18', 'n': 'home19'}
-    obstacles = {'&': 'stones', '%': 'stones2', '!': 'box'}
+    obstacles = {'&': 'stones', '%': 'stones2', '!': 'box', 'w': 'water'}
     obstacles2 = {'x': 'wall'}
     people = [size_image('man1.PNG', size=3), size_image('man2.PNG', size=3),
               size_image('man3.PNG', size=3)]
@@ -594,6 +632,7 @@ def generate_level(level):
                     size_image('monster3.PNG', size=3), size_image('monster4.PNG', size=3),
                     size_image('monster5.PNG', size=3), size_image('monster6.PNG', size=3),
                     size_image('monster7.PNG', size=3)]
+    arr_trains = [size_image('train1.PNG', size=10), size_image('train2.PNG', size=10)]
     image_man = random.choice(people)
     for y in range(len(level)):
         for x in range(len(level[y])):
@@ -627,19 +666,22 @@ def generate_level(level):
                 elif level[y][x] == 'M':
                     Tile('road', x, y)
                     monsters.append(Monsters(random.choice(arr_monsters), x, y))
-    return new_player, x, y, man, man_f, end, other_cars, time, monsters
+                elif level[y][x] == 'T':
+                    Tile('train_road', x, y)
+                    locomotives.append(Trains(random.choice(arr_trains), x, y))
+    return new_player, x, y, man, man_f, end, other_cars, time, monsters, locomotives
 
 
-def terminate():
+def terminate():  # остановка работы приложения
     pygame.quit()
     sys.exit()
 
 
-dict_tiles = {'road': size_image('road.JPG'),
+dict_tiles = {'road': size_image('road.JPG'), 'train_road': size_image('train_road.JPG'),
               'water': size_image('water.JPG'), 'stump': size_image('stump.JPG'),
               'rock': size_image('rock.JPG'), 'flower1': size_image('flower1.JPG'),
               'flower2': size_image('flower2.JPG'), 'grass': size_image('grass.JPG'),
-              'grass2': size_image('grass2.JPG')}
+              'grass2': size_image('grass2.JPG'), 'bridge': size_image('bridge.JPG')}
 objects = {'home1': size_image('home1.PNG', size=1), 'home3': size_image('home3.PNG', size=1),
            'home4': size_image('home4.PNG', size=4), 'home5': size_image('home5.PNG', size=4),
            'home6': size_image('home6.PNG', size=1), 'home7': size_image('home7.PNG', size=5),
