@@ -428,6 +428,8 @@ def play_game():  # основной цикл игры
             if event.type == pygame.QUIT:
                 terminate()
         man.rect.y += 10
+        pygame.mixer.music.load('music/sound6.mp3')
+        pygame.mixer.music.play(1)
         if pygame.sprite.groupcollide(player_group, people_group, False, True):
             run2 = True
             run = False
@@ -520,6 +522,8 @@ def play_game():  # основной цикл игры
             for m in tiles_monsters:
                 if bomb.x >= m.rect.x - player.rect.x + 100 \
                         and m.rect.y <= bomb.y <= m.rect.y + 50:
+                    pygame.mixer.music.load('music/sound6.mp3')
+                    pygame.mixer.music.play(1)
                     bombs = bombs[1:]
                     m.kill()
         if pygame.sprite.groupcollide(player_group, finish, False, False):  # проверка на столкновения
@@ -544,9 +548,11 @@ def play_game():  # основной цикл игры
             if event.type == pygame.QUIT:
                 terminate()
         man_f.rect.y += 10
+        pygame.mixer.music.load('music/sound6.mp3')
+        pygame.mixer.music.play(1)
         if man_f.rect.y == 500:
             delete_tiles()
-            if level == 6:
+            if level >= 6:
                 level = 2
                 game_win()
             else:
@@ -616,7 +622,7 @@ def game_win():  # экран победы
     pygame.mixer.music.play(1)
     image = pygame.transform.scale(load_image("game_passed.JPG"),
                                    (400, 400))
-    SCREEN.blit(image, (150, 150))
+    SCREEN.blit(image, (125, 125))
     font = pygame.font.Font(None, 40)
     text = font.render("restart", True, (255, 51, 0))
     pygame.draw.rect(SCREEN, (0, 255, 222), (145, 465, 120, 40))
