@@ -62,7 +62,7 @@ def size_image(name, size=None):  # получение нужного разме
     elif size == 6:
         image = pygame.transform.scale(load_image(name, colorkey=-1), (180, 190))
     elif size == 7:
-        image = pygame.transform.scale(load_image(name, colorkey=-1), (250, 420))
+        image = pygame.transform.scale(load_image(name, colorkey=-1), (350, 180))
     elif size == 8:
         image = pygame.transform.scale(load_image(name, colorkey=-1), (300, 200))
     elif size == 9:
@@ -70,6 +70,12 @@ def size_image(name, size=None):  # получение нужного разме
         image = pygame.transform.rotate(image, 90)
     elif size == 10:
         image = pygame.transform.scale(load_image(name, colorkey=-1), (50, 300))
+    elif size == 11:
+        image = pygame.transform.scale(load_image(name, colorkey=-1), (160, 170))
+    elif size == 12:
+        image = pygame.transform.scale(load_image(name, colorkey=-1), (250, 190))
+    elif size == 13:
+        image = pygame.transform.scale(load_image(name, colorkey=-1), (190, 120))
     return image
 
 
@@ -178,10 +184,22 @@ def about_develops():  # окно разработчиков
 def rules_game():  # правила игры
     image = pygame.transform.scale(load_image("rules.jpg"), (WIDTH, HEIGHT))
     SCREEN.blit(image, (0, 0))
-    font = pygame.font.Font(None, 40)
-    text = font.render("Close", True, (0, 0, 255))
+    font = pygame.font.Font(None, 30)
+    text = font.render("Close", True, (255, 0, 0))
     pygame.draw.rect(SCREEN, (255, 255, 50), (500, 540, 90, 50))
-    SCREEN.blit(text, (505, 555))
+    SCREEN.blit(text, (515, 555))
+    words = ['                  Правила игры', '- После нажатия на кнопку START',
+             'появляется окнo, в котором', 'нужно выбрать машину,нажав нужную',
+             'цифру на клавиатуре. После этого', 'начнется 1 уровень игры.',
+             '- Нажимая "пробел", вы можете срелять,',
+             'но убить можно только монстров', 'или пробить стену.',
+             '- Доехав до финишной линии, включается новый уровень.',
+             'Цель: довести человечка до нужного места.']
+    y = 40
+    for word in words:
+        text2 = font.render(word, True, (255, 0, 0))
+        SCREEN.blit(text2, (30, y))
+        y += 30
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -193,7 +211,7 @@ def rules_game():  # правила игры
         pygame.display.flip()
 
 
-car = 0
+car = 0  # номер машинки по цвету
 
 
 def choose_car():  # выбор машины
@@ -379,28 +397,28 @@ class Camera:  # камера
         self.dy = -(target.rect.y + target.rect.h // 2 - HEIGHT // 2)
 
 
-level = 2
+level = 2  # уровень
 
 
 def play_game():  # основной цикл игры
     global level
     levels = {1: 'level1.txt', 2: 'level2.txt', 3: 'level3.txt', 4: 'level4.txt',
-              5: 'level5.txt', 6: 'level6.txt', 7: 'level7.txt', 8: 'level8.txt',
-              9: 'level9.txt', 10: 'level10.txt'}
-    speed_player = {1: 10, 2: 1, 3: 12, 4: 14, 5: 16, 6: 18, 7: 20, 8: 22, 9: 24, 10: 26}
+              5: 'level5.txt'}
+    speed_player = {1: (15, 25, 25), 2: (13, 20, 30), 3: (14, 20, 30),
+                    4: (15, 25, 30), 5: (13, 20, 30)}
     player, level_x, level_y, man, man_f, end, other_cars, time, monsters, locomotives = \
         generate_level(load_level(levels[level - 1]))
     camera = Camera((level_x, level_y))
     font = pygame.font.Font(None, 50)
     num_level = font.render('level: ' + str(level - 1), True, (0, 0, 0))
     pygame.time.set_timer(timer2, 100)
-    pygame.time.set_timer(timer3, 80)
-    pygame.time.set_timer(timer4, 75)
-    traffic_car = 0
-    traffic_monster = True
-    speed = 10
-    seconds = 30
-    bombs = []
+    pygame.time.set_timer(timer3, 65)
+    pygame.time.set_timer(timer4, 70)
+    traffic_car = 0  # движение машин
+    traffic_monster = True  # движение монстров
+    speed = speed_player[level - 1][0]  # скорость машины
+    seconds = speed_player[level - 1][-1]  # количество секунд для прохождения
+    bombs = []  # снаряды
     run = True
     run2 = False
     run3 = False
@@ -446,26 +464,27 @@ def play_game():  # основной цикл игры
                         else:
                             monster.rect.y -= 10
             if event.type == pygame.USEREVENT + 3:
-                if other_cars:
+                if len(other_cars) >= 1:
                     for other_car in other_cars:
-                        other_car.rect.x -= STEP
+                        if abs(other_car.rect.y - player.rect.x) <= 300:
+                            other_car.rect.x -= STEP
             if event.type == pygame.USEREVENT + 4:
                 if len(locomotives) >= 1:
                     for locomotive in locomotives:
                         if locomotive.rect.y <= 600:
-                            if abs(locomotive.rect.x - player.rect.x) <= 400:
-                                locomotive.rect.y -= 10
+                            if abs(locomotive.rect.x - player.rect.x) <= 500:
+                                locomotive.rect.y -= 15
         player.rect.x += STEP
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT] and speed != 1:
             speed -= 1
         else:
-            if speed < 10:
+            if speed < speed_player[level - 1][0]:
                 speed += 1
-        if keys[pygame.K_RIGHT] and speed < 20:
+        if keys[pygame.K_RIGHT] and speed < speed_player[level - 1][1]:
             speed += 1
         else:
-            if speed > 10:
+            if speed > speed_player[level - 1][0]:
                 speed -= 1
         for bomb in bombs:
             if bomb.x < 700:
@@ -473,6 +492,8 @@ def play_game():  # основной цикл игры
             else:
                 bombs.pop(bombs.index(bomb))
         if keys[pygame.K_SPACE]:
+            pygame.mixer.music.load('music/sound4.mp3')
+            pygame.mixer.music.play(1)
             if len(bombs) < 3:
                 bombs.append(Shell(player.rect.x + 90,
                                    player.rect.y + 25, 8, (random.randrange(0, 255),
@@ -501,26 +522,20 @@ def play_game():  # основной цикл игры
                         and m.rect.y <= bomb.y <= m.rect.y + 50:
                     bombs = bombs[1:]
                     m.kill()
-        if pygame.sprite.groupcollide(player_group, finish, False, False):
+        if pygame.sprite.groupcollide(player_group, finish, False, False):  # проверка на столкновения
             level += 1
             run2 = False
             run3 = True
         if pygame.sprite.groupcollide(player_group, tiles_obstacles, False, False) \
-                or pygame.sprite.groupcollide(player_group,
-                                              tiles_obstacles2, False, False):
-            run2 = False
-            delete_tiles()
-            game_over()
-        if pygame.sprite.groupcollide(player_group, cars, False, False):
+                or pygame.sprite.groupcollide(player_group, tiles_obstacles2, False, False) \
+                or pygame.sprite.groupcollide(player_group, cars, False, False) \
+                or pygame.sprite.groupcollide(player_group, tiles_monsters, False, False) \
+                or pygame.sprite.groupcollide(player_group, trains, False, False):
             run2 = False
             delete_tiles()
             game_over()
         if pygame.sprite.groupcollide(player_group, timer_object, False, True):
             seconds += 5
-        if pygame.sprite.groupcollide(player_group, tiles_monsters, False, False):
-            run2 = False
-            delete_tiles()
-            game_over()
         pygame.display.flip()
     man_f.rect.y = player.rect.y + 50
     while run3:
@@ -531,7 +546,11 @@ def play_game():  # основной цикл игры
         man_f.rect.y += 10
         if man_f.rect.y == 500:
             delete_tiles()
-            play_game()
+            if level == 6:
+                level = 2
+                game_win()
+            else:
+                play_game()
             return
         draw_tiles()
         finish_man.draw(SCREEN)
@@ -566,25 +585,54 @@ def draw_tiles():  # отображение тайлов
 
 
 def game_over():  # экран проигрыша
+    pygame.mixer.music.load('music/sound3.mp3')
+    pygame.mixer.music.play(1)
     image = pygame.transform.scale(load_image("game_over.jpg"),
                                    (400, 400))
-    SCREEN.blit(image, (100, 100))
+    SCREEN.blit(image, (125, 125))
     font = pygame.font.Font(None, 40)
     text = font.render("restart", True, (255, 51, 0))
-    pygame.draw.rect(SCREEN, (0, 255, 204), (120, 440, 120, 40))
-    SCREEN.blit(text, (135, 448))
+    pygame.draw.rect(SCREEN, (0, 255, 204), (145, 465, 120, 40))
+    SCREEN.blit(text, (160, 473))
     text2 = font.render("menu", True, (255, 51, 0))
-    pygame.draw.rect(SCREEN, (0, 255, 204), (360, 440, 120, 40))
-    SCREEN.blit(text2, (380, 448))
+    pygame.draw.rect(SCREEN, (0, 255, 204), (385, 465, 120, 40))
+    SCREEN.blit(text2, (405, 473))
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if 360 <= event.pos[0] <= 480 and 440 <= event.pos[1] <= 480:
+                if 385 <= event.pos[0] <= 505 and 465 <= event.pos[1] <= 505:
                     main_menu()
                     return
-                if 120 <= event.pos[0] <= 240 and 440 <= event.pos[1] <= 480:
+                if 145 <= event.pos[0] <= 265 and 465 <= event.pos[1] <= 505:
+                    restart()
+                    return
+        pygame.display.flip()
+
+
+def game_win():  # экран победы
+    pygame.mixer.music.load('music/sound5.mp3')
+    pygame.mixer.music.play(1)
+    image = pygame.transform.scale(load_image("game_passed.JPG"),
+                                   (400, 400))
+    SCREEN.blit(image, (150, 150))
+    font = pygame.font.Font(None, 40)
+    text = font.render("restart", True, (255, 51, 0))
+    pygame.draw.rect(SCREEN, (0, 255, 222), (145, 465, 120, 40))
+    SCREEN.blit(text, (160, 473))
+    text2 = font.render("menu", True, (255, 51, 0))
+    pygame.draw.rect(SCREEN, (0, 255, 222), (385, 465, 120, 40))
+    SCREEN.blit(text2, (405, 473))
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if 385 <= event.pos[0] <= 505 and 465 <= event.pos[1] <= 505:
+                    main_menu()
+                    return
+                if 145 <= event.pos[0] <= 265 and 465 <= event.pos[1] <= 505:
                     restart()
                     return
         pygame.display.flip()
@@ -616,8 +664,9 @@ def generate_level(level):  # генерация уровня
                        '8': 'home8', '9': 'home9', '0': 'home10',
                        'a': 'home11', 'b': 'home12', 'c': 'home13',
                        'd': 'home14', 'e': 'home15', 'f': 'home1',
-                       'i': 'home17', 'j': 'home18', 'n': 'home19'}
-    obstacles = {'&': 'stones', '%': 'stones2', '!': 'box', 'w': 'water'}
+                       'i': 'home17', 'j': 'home18', 'n': 'home19',
+                       '<': 'wood1', '>': 'wood2', ')': 'wood3'}
+    obstacles = {'&': 'stones', '%': 'stones2', '!': 'box'}
     obstacles2 = {'x': 'wall'}
     people = [size_image('man1.PNG', size=3), size_image('man2.PNG', size=3),
               size_image('man3.PNG', size=3)]
@@ -646,8 +695,12 @@ def generate_level(level):  # генерация уровня
                     Tile('grass', x, y)
                     Objects(objects_symbols[level[y][x]], x, y)
                 elif level[y][x] in obstacles:
+                    Tile('road', x, y)
                     Obstacles(obstacles[level[y][x]], x, y)
+                elif level[y][x] == 'w':
+                    Obstacles('water', x, y)
                 elif level[y][x] in obstacles2:
+                    Tile('road', x, y)
                     Obstacles2(obstacles2[level[y][x]], x, y)
                 elif level[y][x] == '@':
                     Tile('grass', x, y)
@@ -678,7 +731,7 @@ def terminate():  # остановка работы приложения
 
 
 dict_tiles = {'road': size_image('road.JPG'), 'train_road': size_image('train_road.JPG'),
-              'water': size_image('water.JPG'), 'stump': size_image('stump.JPG'),
+              'stump': size_image('stump.JPG'),
               'rock': size_image('rock.JPG'), 'flower1': size_image('flower1.JPG'),
               'flower2': size_image('flower2.JPG'), 'grass': size_image('grass.JPG'),
               'grass2': size_image('grass2.JPG'), 'bridge': size_image('bridge.JPG')}
@@ -688,13 +741,15 @@ objects = {'home1': size_image('home1.PNG', size=1), 'home3': size_image('home3.
            'home8': size_image('home8.PNG', size=5), 'home9': size_image('home9.PNG', size=5),
            'home10': size_image('home10.PNG', size=6), 'home11': size_image('home11.PNG', size=5),
            'home12': size_image('home12.PNG', size=6), 'home13': size_image('home13.PNG', size=6),
-           'home14': size_image('home14.PNG', size=6), 'home15': size_image('home15.PNG'),
+           'home14': size_image('home14.PNG', size=6), 'home15': size_image('home15.PNG', size=6),
            'home16': size_image('home16.PNG', size=6), 'home18': size_image('home18.PNG', size=1),
-           'home17': size_image('home17.PNG', size=4), 'home19': size_image('home19.PNG', size=7),
-           'home20': size_image('home20.PNG', size=7), 'home2': size_image('home2.PNG', size=1)}
+           'home17': size_image('home17.PNG', size=12), 'home19': size_image('home19.PNG', size=13),
+           'home20': size_image('home20.PNG', size=7), 'home2': size_image('home2.PNG', size=1),
+           'wood1': size_image('wood1.PNG', size=11), 'wood2': size_image('wood2.PNG', size=11),
+           'wood3': size_image('wood3.PNG', size=11)}
 dict_obstacles = {'stones': size_image('stones.PNG', size=3),
                   'stones2': size_image('stones2.PNG', size=3),
-                  'box': size_image('box.png')}
+                  'box': size_image('box.png'), 'water': size_image('water.JPG')}
 dict_obstacles2 = {'wall': size_image('wall.JPG')}
 tile_width = tile_height = 50
 if __name__ == "__main__":
